@@ -1,5 +1,6 @@
 from prompt_manager import PromptManager
-
+import os
+print(os.getcwd())
 prompt_manager = PromptManager()
 
 # prompt_data = prompt_manager.load_prompt("customer_support", "v1.0.0")
