@@ -1,0 +1,2624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The 7 Layers of RAG – A Complete Technical Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #060810;
+  --bg2:      #090d18;
+  --bg3:      #0c1120;
+  --card:     #0f1628;
+  --card2:    #131c34;
+  --border:   rgba(90,120,255,0.13);
+  --border2:  rgba(90,120,255,0.22);
+
+  /* Layer accent palette */
+  --l1: #ff7043; --l1b: rgba(255,112,67,.12);
+  --l2: #ffb300; --l2b: rgba(255,179,0,.12);
+  --l3: #66bb6a; --l3b: rgba(102,187,106,.12);
+  --l4: #29b6f6; --l4b: rgba(41,182,246,.12);
+  --l5: #ab47bc; --l5b: rgba(171,71,188,.12);
+  --l6: #ef5350; --l6b: rgba(239,83,80,.12);
+  --l7: #26c6da; --l7b: rgba(38,198,218,.12);
+
+  --accent:   #5a78ff;
+  --accent2:  #00e5b0;
+  --gold:     #ffd54f;
+  --text:     #dde4f0;
+  --muted:    #6b7fa8;
+  --faint:    #364060;
+  --code-bg:  #070a14;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 80px 32px;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% -5%, rgba(90,120,255,.22) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 85% 90%, rgba(0,229,176,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 5% 80%, rgba(255,112,67,.08) 0%, transparent 55%);
+}
+.grid-lines {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(90,120,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90,120,255,.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.hero-badge {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 18px;
+  background: rgba(90,120,255,.12);
+  border: 1px solid rgba(90,120,255,.3);
+  border-radius: 100px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 28px;
+}
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(40px,7vw,88px);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -2px;
+  position: relative;
+  max-width: 900px;
+  margin-bottom: 10px;
+}
+.hero h1 .accent-word { color: var(--accent2); }
+.hero h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(16px,2.5vw,26px);
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: -0.3px;
+  margin-bottom: 32px;
+  position: relative;
+}
+.meta-row {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  position: relative; margin-bottom: 56px;
+}
+.meta-chip {
+  padding: 7px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px; color: var(--muted);
+}
+.meta-chip b { color: var(--text); }
+
+/* ── PIPELINE VISUAL ── */
+.pipeline-visual {
+  position: relative;
+  display: flex; align-items: center; gap: 0;
+  flex-wrap: wrap; justify-content: center;
+  width: 100%; max-width: 900px;
+}
+.pv-block {
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; z-index: 1;
+}
+.pv-circle {
+  width: 58px; height: 58px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800;
+  border: 2px solid;
+  margin-bottom: 8px;
+  transition: transform .2s;
+}
+.pv-circle:hover { transform: scale(1.1); }
+.pv-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; white-space: nowrap; color: var(--muted);
+}
+.pv-arrow {
+  font-size: 18px; color: var(--faint); padding: 0 4px;
+  padding-bottom: 28px; flex-shrink: 0;
+}
+.pv-block.l1 .pv-circle { color: var(--l1); border-color: var(--l1); background: var(--l1b); }
+.pv-block.l2 .pv-circle { color: var(--l2); border-color: var(--l2); background: var(--l2b); }
+.pv-block.l3 .pv-circle { color: var(--l3); border-color: var(--l3); background: var(--l3b); }
+.pv-block.l4 .pv-circle { color: var(--l4); border-color: var(--l4); background: var(--l4b); }
+.pv-block.l5 .pv-circle { color: var(--l5); border-color: var(--l5); background: var(--l5b); }
+.pv-block.l6 .pv-circle { color: var(--l6); border-color: var(--l6); background: var(--l6b); }
+.pv-block.l7 .pv-circle { color: var(--l7); border-color: var(--l7); background: var(--l7b); }
+
+/* ── PIPELINE BANDS ── */
+.pipeline-band {
+  padding: 14px 24px;
+  border-radius: 10px;
+  display: flex; gap: 12px; align-items: center;
+  font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.pipeline-band.offline { background: rgba(90,120,255,.08); border: 1px solid rgba(90,120,255,.2); color: var(--accent); }
+.pipeline-band.online  { background: rgba(0,229,176,.07); border: 1px solid rgba(0,229,176,.2); color: var(--accent2); }
+
+/* ── OVERVIEW TABLE ── */
+.overview-table-section { padding: 80px 32px; background: var(--bg2); }
+
+/* ── LAYER SECTIONS ── */
+.layer-section {
+  padding: 80px 32px;
+  position: relative;
+}
+.layer-section:nth-child(odd) { background: var(--bg3); }
+
+.layer-header {
+  display: flex; gap: 24px; align-items: flex-start;
+  margin-bottom: 40px;
+}
+.layer-icon-big {
+  width: 72px; height: 72px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 800; font-family: 'Syne', sans-serif;
+  flex-shrink: 0; border: 2px solid;
+}
+.layer-header-text .layer-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.layer-header-text h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(22px,3.5vw,40px);
+  font-weight: 800; letter-spacing: -0.5px;
+  line-height: 1.1; margin-bottom: 12px;
+}
+.layer-header-text .layer-desc {
+  font-size: 15px; color: var(--muted); max-width: 640px; line-height: 1.75;
+}
+
+/* Layer-specific colours */
+.l1 .layer-icon-big, .l1-color { color: var(--l1); border-color: var(--l1); background: var(--l1b); }
+.l2 .layer-icon-big, .l2-color { color: var(--l2); border-color: var(--l2); background: var(--l2b); }
+.l3 .layer-icon-big, .l3-color { color: var(--l3); border-color: var(--l3); background: var(--l3b); }
+.l4 .layer-icon-big, .l4-color { color: var(--l4); border-color: var(--l4); background: var(--l4b); }
+.l5 .layer-icon-big, .l5-color { color: var(--l5); border-color: var(--l5); background: var(--l5b); }
+.l6 .layer-icon-big, .l6-color { color: var(--l6); border-color: var(--l6); background: var(--l6b); }
+.l7 .layer-icon-big, .l7-color { color: var(--l7); border-color: var(--l7); background: var(--l7b); }
+
+.layer-eyebrow.l1-txt { color: var(--l1); }
+.layer-eyebrow.l2-txt { color: var(--l2); }
+.layer-eyebrow.l3-txt { color: var(--l3); }
+.layer-eyebrow.l4-txt { color: var(--l4); }
+.layer-eyebrow.l5-txt { color: var(--l5); }
+.layer-eyebrow.l6-txt { color: var(--l6); }
+.layer-eyebrow.l7-txt { color: var(--l7); }
+
+/* ── SHARED ── */
+.container { max-width: 980px; margin: 0 auto; }
+
+/* ── TABLES ── */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 24px 0;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--card2); border-bottom: 1px solid var(--border); }
+thead th {
+  padding: 12px 16px; text-align: left;
+  font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--muted); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid rgba(90,120,255,.06); transition: background .15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(90,120,255,.04); }
+tbody td { padding: 11px 16px; vertical-align: top; color: var(--text); }
+td strong { color: var(--text); }
+
+.badge {
+  display: inline-block; padding: 2px 8px;
+  border-radius: 5px; font-size: 11px; font-weight: 600;
+  background: rgba(90,120,255,.12); color: var(--accent);
+  border: 1px solid rgba(90,120,255,.2);
+}
+.badge.green  { background: rgba(102,187,106,.1); color: var(--l3); border-color: rgba(102,187,106,.25); }
+.badge.orange { background: rgba(255,112,67,.1);  color: var(--l1); border-color: rgba(255,112,67,.25); }
+.badge.teal   { background: rgba(0,229,176,.1);   color: var(--accent2); border-color: rgba(0,229,176,.25); }
+.badge.yellow { background: rgba(255,179,0,.1);   color: var(--l2); border-color: rgba(255,179,0,.25); }
+.badge.red    { background: rgba(239,83,80,.1);   color: var(--l6); border-color: rgba(239,83,80,.25); }
+.badge.purple { background: rgba(171,71,188,.1);  color: var(--l5); border-color: rgba(171,71,188,.25); }
+.badge.cyan   { background: rgba(38,198,218,.1);  color: var(--l7); border-color: rgba(38,198,218,.25); }
+
+/* ── ENTERPRISE CONTEXT BADGE ── */
+.ent-context {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(255, 213, 79, 0.05);
+  border-left: 2px solid var(--gold);
+  font-size: 12px;
+  color: var(--text);
+  border-radius: 0 6px 6px 0;
+  line-height: 1.6;
+}
+.ent-context strong { color: var(--gold); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+
+/* ── CODE BLOCK ── */
+.code-wrap {
+  background: var(--code-bg);
+  border: 1px solid rgba(90,120,255,.15);
+  border-radius: 12px; overflow: hidden; margin: 22px 0;
+}
+.code-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(90,120,255,.06);
+  border-bottom: 1px solid rgba(90,120,255,.1);
+}
+.code-dots { display: flex; gap: 5px; }
+.code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.code-dots span:nth-child(1) { background: #ff5f57; }
+.code-dots span:nth-child(2) { background: #ffbd2e; }
+.code-dots span:nth-child(3) { background: #28ca41; }
+.code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--faint); letter-spacing: 1px; }
+.code-body {
+  padding: 20px; overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px; line-height: 1.75; color: #8fa5d0;
+}
+.ck { color: #7da8ff; }   /* keyword */
+.cs { color: #90e09a; }   /* string */
+.cn { color: #ffb86c; }   /* number */
+.cc { color: #3d5070; font-style: italic; } /* comment */
+.cf { color: #d9a0ff; }   /* function */
+.cy { color: var(--gold); } /* key */
+
+/* ── CALLOUT BOXES ── */
+.callout {
+  border-radius: 12px; padding: 20px 24px; margin: 22px 0;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.callout.info   { background: rgba(90,120,255,.08);  border: 1px solid rgba(90,120,255,.2); }
+.callout.tip    { background: rgba(0,229,176,.07);   border: 1px solid rgba(0,229,176,.2);  }
+.callout.warn   { background: rgba(255,179,0,.08);   border: 1px solid rgba(255,179,0,.2);  }
+.callout.danger { background: rgba(239,83,80,.08);   border: 1px solid rgba(239,83,80,.2);  }
+.callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.callout-body p { font-size: 14px; color: var(--text); line-height: 1.7; }
+.callout-body strong { color: var(--text); }
+
+/* ── SECTION IMAGES ── */
+.sec-img {
+  width: 100%; border-radius: 14px; overflow: hidden; margin: 28px 0;
+}
+.sec-img img {
+  width: 100%; height: 220px; object-fit: cover; display: block;
+  filter: brightness(.5) saturate(1.2);
+  border-radius: 14px;
+}
+.img-caption { font-size: 11px; color: var(--faint); text-align: center; margin-top: -12px; margin-bottom: 20px; }
+
+/* ── VISUAL CARDS ── */
+.vis-card-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 16px; margin: 22px 0;
+}
+.vis-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+  transition: transform .2s, border-color .2s;
+  display: flex; flex-direction: column;
+}
+.vis-card:hover { transform: translateY(-3px); border-color: var(--border2); }
+.vis-card-icon { font-size: 26px; margin-bottom: 12px; }
+.vis-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.vis-card p  { font-size: 12px; color: var(--muted); line-height: 1.65; flex-grow: 1; }
+
+/* ── STRATEGY CARDS ── */
+.strategy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap: 16px; margin: 22px 0; }
+.strategy-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.strategy-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+}
+.strategy-card.s1::before { background: var(--l1); }
+.strategy-card.s2::before { background: var(--l2); }
+.strategy-card.s3::before { background: var(--l3); }
+.strategy-card.s4::before { background: var(--l4); }
+.strategy-card.s5::before { background: var(--l5); }
+.strategy-card.s6::before { background: var(--l6); }
+.strategy-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+.strategy-card > p { flex-grow: 1; font-size: 13.5px; }
+.strategy-card .st-tag {
+  font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 10px; display: block;
+}
+
+/* ── COMPARE TWO-COL ── */
+.two-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 22px 0; }
+@media(max-width:660px) { .two-compare { grid-template-columns: 1fr; } }
+.cmp-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.cmp-box.bad  { border-color: rgba(239,83,80,.25); }
+.cmp-box.good { border-color: rgba(0,229,176,.25);  }
+.cmp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+.cmp-label.bad-l  { color: var(--l6); }
+.cmp-label.good-l { color: var(--accent2); }
+.cmp-box p { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+/* ── RERANK PIPELINE VISUAL ── */
+.rerank-pipe { margin: 22px 0; }
+.rp-step {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 14px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.rp-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.rp-body h5 { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.rp-body p { font-size: 12px; color: var(--muted); }
+.rp-arrow { text-align: center; color: var(--faint); font-size: 16px; line-height: 1; margin-bottom: 8px; }
+
+/* ── SECTION DIVIDER ── */
+hr.section-hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+/* ── SUMMARY ── */
+.summary-section { padding: 80px 32px; background: var(--bg2); }
+.sum-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 14px; margin-top: 36px; }
+.sum-row {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;
+}
+.sum-num {
+  width: 34px; height: 34px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
+  flex-shrink: 0; border: 1px solid;
+}
+.sum-body h5 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.sum-body p  { font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+/* ── PITFALLS ── */
+.pitfall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 14px; margin-top: 24px; }
+.pitfall-card {
+  background: var(--card); border: 1px solid rgba(239,83,80,.18);
+  border-radius: 12px; padding: 20px;
+}
+.pitfall-card .layer-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--l6); margin-bottom: 8px; display: block;
+}
+.pitfall-card h5 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.pitfall-card p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.pitfall-card .fix { font-size: 12px; color: var(--accent2); margin-top: 8px; font-weight: 500; }
+
+/* ── NEXT STEPS ── */
+.next-section { padding: 80px 32px; }
+.ns-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 14px; margin-top: 30px; }
+.ns-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px; transition: all .2s;
+}
+.ns-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.ns-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.ns-card p  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+/* ── FOOTER ── */
+footer { border-top: 1px solid var(--border); padding: 32px; text-align: center; font-size: 12px; color: var(--faint); }
+footer b { color: var(--muted); }
+
+/* ── MISC ── */
+p { color: var(--muted); margin: 12px 0; font-size: 14.5px; }
+h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin: 30px 0 12px; }
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(90,120,255,.1); padding: 1px 6px; border-radius: 4px; }
+strong { color: var(--text); }
+
+@media(max-width:700px) {
+  .layer-header { flex-direction: column; }
+  .layer-icon-big { width: 54px; height: 54px; font-size: 22px; }
+  .pipeline-visual .pv-arrow { display: none; }
+  .pipeline-visual { gap: 8px; }
+}
+
+ul.feature-list {
+  margin-left: 20px;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+ul.feature-list li { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="grid-lines"></div>
+
+  <div class="hero-badge">Complete Technical Guide · Version 1.0 · April 2026</div>
+  <h1>THE 7 LAYERS OF<br><span class="accent-word">RAG</span></h1>
+  <h2>Retrieval-Augmented Generation</h2>
+  <div class="meta-row">
+    <div class="meta-chip">👥 Target: <b>AI Engineers</b></div>
+    <div class="meta-chip">📋 Prerequisites: <b>LLMs · Embeddings · Vector DBs</b></div>
+    <div class="meta-chip">🗓️ Last Updated: <b>April 2026</b></div>
+  </div>
+
+  <div class="pipeline-visual">
+    <div class="pv-block l1"><div class="pv-circle">1</div><div class="pv-label">Parsing</div></div>
+    <div class="pv-arrow">→</div>
+    <div class="pv-block l2"><div class="pv-circle">2</div><div class="pv-label">Chunking</div></div>
+    <div class="pv-arrow">→</div>
+    <div class="pv-block l3"><div class="pv-circle">3</div><div class="pv-label">Embedding</div></div>
+    <div class="pv-arrow">→</div>
+    <div class="pv-block l4"><div class="pv-circle">4</div><div class="pv-label">Vector DB</div></div>
+    <div class="pv-arrow">→</div>
+    <div class="pv-block l5"><div class="pv-circle">5</div><div class="pv-label">Retrieval</div></div>
+    <div class="pv-arrow">→</div>
+    <div class="pv-block l6"><div class="pv-circle">6</div><div class="pv-label">Reranking</div></div>
+    <div class="pv-arrow">→</div>
+    <div class="pv-block l7"><div class="pv-circle">7</div><div class="pv-label">Generation</div></div>
+  </div>
+</section>
+
+<section class="layer-section" style="background: var(--bg3);" id="introduction">
+  <div class="container">
+    <div class="layer-header" style="margin-bottom: 24px;">
+      <div class="layer-header-text">
+        <div class="layer-eyebrow" style="color: var(--accent2);">Foundation</div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;">Introduction to RAG</h2>
+        <p class="layer-desc" style="max-width: 100%;"><strong>Retrieval-Augmented Generation (RAG)</strong> is an AI framework that improves the quality, accuracy, and reliability of Large Language Models (LLMs) by grounding their responses in external, authoritative knowledge bases. Instead of relying solely on the static data an LLM was trained on, a RAG system first <em>retrieves</em> relevant facts from a custom dataset and then <em>generates</em> an answer based exclusively on that retrieved context.</p>
+      </div>
+    </div>
+
+    <div class="two-compare" style="margin-bottom: 40px;">
+      <div class="cmp-box" style="border-color: rgba(90,120,255,.25);">
+        <div class="cmp-label" style="color: var(--accent);">Why RAG? (The Problem It Solves)</div>
+        <p>Standard LLMs act like brilliant scholars who haven't read a new book since graduation. They suffer from static knowledge cutoffs, hallucinate when they lack information, and cannot access private company data. While <strong>Fine-Tuning</strong> teaches an LLM new information, it is computationally expensive and hard to update. <strong>RAG</strong> solves this by decoupling "knowledge" (vector DB) from "reasoning" (LLM), offering a cost-effective, accurate, and manageable enterprise AI solution.</p>
+      </div>
+      <div class="cmp-box" style="border-color: rgba(0,229,176,.25);">
+        <div class="cmp-label" style="color: var(--accent2);">Key Features</div>
+        <ul class="feature-list">
+          <li><strong>Dynamic Knowledge Access:</strong> Pulls from live/updated databases without retraining models.</li>
+          <li><strong>Contextual Grounding:</strong> Dramatically reduces "hallucinations" by forcing answers directly from context.</li>
+          <li><strong>Source Traceability:</strong> Provides accurate, verifiable source citations.</li>
+          <li><strong>Data Privacy &amp; Security:</strong> Queries highly sensitive data securely without exposing it to public training sets.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:16px;">Real-Life Applications</h3>
+    <div class="vis-card-grid">
+      <div class="vis-card">
+        <div class="vis-card-icon">🏢</div>
+        <h4>Enterprise Knowledge</h4>
+        <p>Internal chatbots searching Confluence, Drive, and Slack to answer policy or IT questions instantly.</p>
+        <div class="ent-context"><strong>Production Reality:</strong> Scales to handle massive access-control lists (RBAC) so users only query docs they have permission to see.</div>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">🎧</div>
+        <h4>Customer Support</h4>
+        <p>AI agents ingesting manuals and tickets to provide highly specific user resolutions in real-time.</p>
+        <div class="ent-context"><strong>Production Reality:</strong> Must strictly avoid hallucinating non-existent refund policies to prevent legal/financial liability.</div>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">⚖️</div>
+        <h4>Legal &amp; Medical</h4>
+        <p>Systems allowing professionals to query case laws or journals with exact paragraph citations.</p>
+        <div class="ent-context"><strong>Production Reality:</strong> Requires highly specialized chunking to avoid cutting critical "exceptions" away from primary rules.</div>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">💻</div>
+        <h4>Codebase Copilots</h4>
+        <p>Engineering tools indexing proprietary code so developers can ask how specific microservices interact.</p>
+        <div class="ent-context"><strong>Production Reality:</strong> Uses fine-tuned code embedding models (like Voyage-code) to understand syntax rather than just semantics.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="overview-table-section">
+  <div class="container">
+    <h3 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px;">The 7 Layers at a Glance</h3>
+    <p style="margin-bottom:24px;">Each layer transforms information in a specific way — together they build the complete RAG pipeline from raw documents to precise answers.</p>
+
+    <div class="pipeline-band offline">📥 &nbsp;OFFLINE INDEXING PIPELINE — Layers 1–4 · Run once (or on document update)</div>
+    <div class="pipeline-band online" style="margin-bottom:24px;">⚡ ONLINE QUERY PIPELINE — Layers 5–7 · Run on every user query</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Layer Name</th><th>Function</th><th>Input → Output</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge orange">L1</span></td><td><strong>Document Parsing &amp; Ingestion</strong></td><td>Convert raw documents to clean text</td><td>PDF/Word/HTML → Plain text</td></tr>
+          <tr><td><span class="badge yellow">L2</span></td><td><strong>Chunking</strong></td><td>Split text into manageable pieces</td><td>Long text → Small chunks</td></tr>
+          <tr><td><span class="badge green">L3</span></td><td><strong>Embedding Generation</strong></td><td>Convert text to numerical vectors</td><td>Text chunks → Vector embeddings</td></tr>
+          <tr><td><span class="badge" style="background:rgba(41,182,246,.12);color:#29b6f6;border-color:rgba(41,182,246,.3)">L4</span></td><td><strong>Vector Storage &amp; Indexing</strong></td><td>Store and index vectors for fast search</td><td>Vectors → Searchable index</td></tr>
+          <tr><td><span class="badge purple">L5</span></td><td><strong>Query Processing &amp; Retrieval</strong></td><td>Convert query to vectors and search</td><td>User question → Relevant chunks</td></tr>
+          <tr><td><span class="badge red">L6</span></td><td><strong>Reranking &amp; Filtering</strong></td><td>Improve retrieval quality</td><td>Retrieved chunks → Re-ranked chunks</td></tr>
+          <tr><td><span class="badge cyan">L7</span></td><td><strong>Generation &amp; Response Synthesis</strong></td><td>Generate answer from retrieved context</td><td>Query + Chunks → Final answer</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="layer-section l1" id="layer1">
+  <div class="container">
+    <div class="layer-header">
+      <div class="layer-icon-big l1-color">1</div>
+      <div class="layer-header-text">
+        <div class="layer-eyebrow l1-txt">Layer 01 · Offline Pipeline</div>
+        <h2>Document Parsing &amp; Ingestion</h2>
+        <p class="layer-desc">Transform raw, unstructured files — PDFs, Word docs, HTML, images — into clean, structured plain text with rich metadata that all downstream layers can consume.</p>
+      </div>
+    </div>
+
+    <div class="sec-img"><img src="https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=1200&auto=format&fit=crop&q=55" alt="Document parsing"></div>
+    <p class="img-caption">Layer 1 handles every format: scanned PDFs need OCR, web pages need JS rendering, code files need AST parsing.</p>
+
+    <h3>Parsing Techniques by Document Type</h3>
+    <div class="vis-card-grid">
+      <div class="vis-card">
+        <div class="vis-card-icon">📄</div>
+        <h4>PDF Parsing</h4>
+        <p>Scanned PDFs → OCR (Tesseract, AWS Textract). Text PDFs → pdfplumber, pypdf. Complex tables → Camelot, LayoutLM.</p>
+        <div class="ent-context"><strong>Production Reality:</strong> Financial institutions use AWS Textract or Document AI to accurately extract tabular data from dense PDF annual reports.</div>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">📝</div>
+        <h4>Word (.docx)</h4>
+        <p>Use python-docx to traverse elements. Extract tables cell-by-cell. Pull embedded images separately.</p>
+        <div class="ent-context"><strong>Production Reality:</strong> Legal firms rely on structure-aware parsers to retain precise clause numbering and header hierarchies critical to contracts.</div>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">🌐</div>
+        <h4>HTML / Web</h4>
+        <p>Strip nav/ads with Readability.js. Dynamic JS content → Playwright or Puppeteer. Extract JSON-LD structured data.</p>
+        <div class="ent-context"><strong>Production Reality:</strong> Enterprise intranets (SharePoint/Confluence) require parsers that handle complex SSO/Auth gateways before content can be scraped.</div>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">💻</div>
+        <h4>Code Files</h4>
+        <p>Preserve line numbers + language. Keep comments (they provide context). Parse AST for imports/dependencies.</p>
+        <div class="ent-context"><strong>Production Reality:</strong> Tech companies strip out compiled binaries and lockfiles, explicitly indexing internal documentation alongside AST graphs.</div>
+      </div>
+    </div>
+
+    <h3>Real-World Output (JSON)</h3>
+    <div class="code-wrap">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">JSON · LAYER 1 OUTPUT</div></div>
+      <div class="code-body">
+{
+  <span class="cy">"chunks"</span>: [
+    {
+      <span class="cy">"text"</span>: <span class="cs">"SECTION 1: VACATION POLICY\n\nAll full-time employees receive 20 days of paid vacation..."</span>,
+      <span class="cy">"metadata"</span>: {
+        <span class="cy">"source"</span>:        <span class="cs">"employee_handbook_2024.pdf"</span>,
+        <span class="cy">"page"</span>:          <span class="cn">3</span>,
+        <span class="cy">"section"</span>:       <span class="cs">"Vacation Policy"</span>,
+        <span class="cy">"last_modified"</span>: <span class="cs">"2024-01-15"</span>,
+        <span class="cy">"author"</span>:        <span class="cs">"HR Department"</span>
+      }
+    }
+  ]
+}
+      </div>
+    </div>
+
+    <h3>Parsing Tools — Full Comparison & Enterprise Application</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tool</th><th>Formats</th><th>OCR / Tables</th><th>Enterprise Rationale / Why use it?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Unstructured.io</strong></td><td>PDF, Word, HTML, PPT, Email</td><td><span class="badge teal">Yes / Yes</span></td><td>Standardizes ingestion pipelines for teams dealing with highly heterogeneous data (email + docs + web) simultaneously.</td></tr>
+          <tr><td><strong>LangChain Loaders</strong></td><td>100+ types (YouTube, Notion…)</td><td><span class="badge yellow">Via integrations</span></td><td>Best for rapid prototyping and connecting to external SaaS apps (like Notion or Slack) via simple API wrappers.</td></tr>
+          <tr><td><strong>pdfplumber</strong></td><td>PDF only</td><td><span class="badge red">No OCR</span> / <span class="badge teal">Yes (Cells)</span></td><td>Crucial for parsing text-native PDFs with complex financial or scientific tables where spatial boundaries matter.</td></tr>
+          <tr><td><strong>AWS Textract / Google Doc AI</strong></td><td>PDF, Images, TIFF</td><td><span class="badge teal">Advanced / Forms</span></td><td>Production workhorse for scanned documents. High cost but essential for processing thousands of scanned invoices or medical records.</td></tr>
+          <tr><td><strong>Docling (IBM)</strong></td><td>PDF, DOCX, PPTX, HTML</td><td><span class="badge teal">Yes / Yes</span></td><td>Provides deep layout understanding, ensuring reading order in multi-column research papers is preserved.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="layer-section l2" id="layer2">
+  <div class="container">
+    <div class="layer-header">
+      <div class="layer-icon-big l2-color">2</div>
+      <div class="layer-header-text">
+        <div class="layer-eyebrow l2-txt">Layer 02 · Offline Pipeline</div>
+        <h2>Chunking (Text Segmentation)</h2>
+        <p class="layer-desc">Divide long documents into smaller, semantically coherent segments that fit within LLM context windows and enable precise retrieval. The critical balance between context and specificity.</p>
+      </div>
+    </div>
+
+    <div class="sec-img"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=55" alt="Text segmentation visual"></div>
+
+    <div class="two-compare" style="margin-bottom: 32px;">
+      <div class="cmp-box bad">
+        <div class="cmp-label bad-l">❌ Too-Small Chunks</div>
+        <p>Missing context around the answer · Answer split across chunks · Multiple retrievals needed · Poor semantic meaning per chunk</p>
+      </div>
+      <div class="cmp-box good">
+        <div class="cmp-label good-l">❌ Too-Large Chunks</div>
+        <p>Retrieves irrelevant information · Dilutes relevant signal with noise · May exceed LLM context window · Slower embedding and search</p>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom: 24px;">11 Orchestrated Chunking Strategies</h3>
+    <p style="color:var(--muted);margin-bottom:20px;">Here is a comprehensive breakdown of all chunking strategies used in RAG systems, spanning from simple heuristics to advanced LLM-driven architectures.</p>
+
+    <div class="strategy-grid">
+      <div class="strategy-card s1">
+        <span class="st-tag" style="color:var(--l1)">Strategy 1</span>
+        <h4>Fixed-Size Chunking</h4>
+        <p>Split text into chunks of an exact token or character count, regardless of content.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Every N tokens/characters → new chunk. Add 10–20% overlap to avoid losing context at boundaries.</li>
+          <li><strong>Pros/Cons:</strong> Fastest, predictable sizes <em>but</em> cuts sentences mid-thought, ignores meaning.</li>
+          <li><strong>Best for:</strong> Prototyping, plain homogeneous text.</li>
+          <li><strong>Library:</strong> <span class="mono">CharacterTextSplitter</span></li>
+        </ul>
+        <div class="ent-context"><strong>Production Reality:</strong> Rarely used in modern production unless dealing with extremely uniform, unstructured logs.</div>
+      </div>
+
+      <div class="strategy-card s2">
+        <span class="st-tag" style="color:var(--l2)">Strategy 2</span>
+        <h4>Sentence-Based Chunking</h4>
+        <p>Split at natural sentence boundaries (. ? !) and group 3–5 sentences per chunk.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Use NLP sentence tokenizer (NLTK, spaCy), combine N sentences into one chunk.</li>
+          <li><strong>Pros/Cons:</strong> Preserves grammatical units <em>but</em> creates variable sizes; long sentences can create oversized chunks.</li>
+          <li><strong>Best for:</strong> News articles, FAQs, blog posts.</li>
+          <li><strong>Library:</strong> <span class="mono">NLTKTextSplitter</span>, <span class="mono">SpacyTextSplitter</span></li>
+        </ul>
+        <div class="ent-context"><strong>Production Reality:</strong> Useful in Customer Support Q&A bots where answers are typically short, highly specific, and found within 1-2 exact sentences.</div>
+      </div>
+
+      <div class="strategy-card s3">
+        <span class="st-tag" style="color:var(--l3)">Strategy 3</span>
+        <h4>Paragraph-Based Chunking</h4>
+        <p>Each paragraph (separated by <span class="mono">\n\n</span>) becomes one chunk.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Split on double newlines; merge very short paragraphs together.</li>
+          <li><strong>Pros/Cons:</strong> Naturally preserves topic boundaries <em>but</em> highly variable sizes (5 words vs 500 words).</li>
+          <li><strong>Best for:</strong> Well-structured reports, documentation.</li>
+          <li><strong>Library:</strong> <span class="mono">RecursiveCharacterTextSplitter (\n\n)</span></li>
+        </ul>
+      </div>
+
+      <div class="strategy-card s4">
+        <span class="st-tag" style="color:var(--l4)">Strategy 4 · Recommended Default</span>
+        <h4>Recursive Character Chunking</h4>
+        <p>Try splitting by the largest separator first, fall back to smaller ones.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Tries <span class="mono">\n\n</span> → <span class="mono">\n</span> → <span class="mono">.</span> → space → character until chunks fit target size.</li>
+          <li><strong>Pros/Cons:</strong> Versatile, consistent sizes, respects structure <em>but</em> still not truly semantically aware.</li>
+          <li><strong>Best for:</strong> General-purpose starting point for most RAG pipelines.</li>
+          <li><strong>Library:</strong> <span class="mono">RecursiveCharacterTextSplitter</span></li>
+        </ul>
+      </div>
+
+      <div class="strategy-card s5" style="grid-column: 1 / -1;">
+        <span class="st-tag" style="color:var(--l5)">Strategy 5 · Highest Quality</span>
+        <h4>Semantic Chunking</h4>
+        <p>Split based on actual meaning shifts in the text — not characters or lines.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Embed every sentence individually → Compute cosine similarity between consecutive sentences → Split where similarity drops below a threshold.</li>
+          <li><strong>Pros/Cons:</strong> Most semantically coherent chunks <em>but</em> slow and computationally expensive (not suited for real-time).</li>
+          <li><strong>Best for:</strong> High-quality production RAG, scientific papers, long-form content.</li>
+          <li><strong>Library:</strong> <span class="mono">SemanticChunker</span></li>
+        </ul>
+        <div class="code-wrap" style="margin-top:14px;">
+          <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">SEMANTIC SPLIT ALGORITHM (CONCEPTUAL)</div></div>
+          <div class="code-body">
+S1→S2: <span class="cn">0.91</span>   <span class="cc">← same topic, no split</span>
+S2→S3: <span class="cn">0.88</span>   <span class="cc">← same topic, no split</span>
+S3→S4: <span class="cn">0.42</span>   <span class="cc">← topic shift detected! ✂ SPLIT HERE</span>
+S4→S5: <span class="cn">0.90</span>   <span class="cc">← new topic continues</span>
+          </div>
+        </div>
+        <div class="ent-context"><strong>Production Reality:</strong> Essential for Legal and Medical domains. If a chunk splits a medical diagnosis from its list of side effects, the resulting RAG answer could be dangerous. Semantic boundaries prevent this.</div>
+      </div>
+
+      <div class="strategy-card s6">
+        <span class="st-tag" style="color:var(--l6)">Strategy 6</span>
+        <h4>Document Structure-Aware</h4>
+        <p>Use the document's own headings, sections, or tags as chunk boundaries.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Parse Markdown headers, HTML tags, or PDF section titles as natural split points.</li>
+          <li><strong>Pros/Cons:</strong> Aligns perfectly with logical structure <em>but</em> requires highly structured docs.</li>
+          <li><strong>Best for:</strong> Markdown wikis, HTML docs, tagged PDFs, code repos.</li>
+          <li><strong>Library:</strong> <span class="mono">MarkdownTextSplitter</span>, <span class="mono">HTMLHeaderTextSplitter</span></li>
+        </ul>
+        <div class="ent-context"><strong>Production Reality:</strong> The gold standard for Engineering teams indexing Github repos or Notion wikis. Ensures an entire function or H2 policy section stays together.</div>
+      </div>
+
+      <div class="strategy-card s1">
+        <span class="st-tag" style="color:var(--l1)">Strategy 7</span>
+        <h4>Token-Based Chunking</h4>
+        <p>Split exactly on the model's tokenizer boundaries, not plain characters.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Use <span class="mono">tiktoken</span> or HuggingFace tokenizers to count actual tokens.</li>
+          <li><strong>Pros/Cons:</strong> Highly precise for context windows <em>but</em> slower than character splitting.</li>
+          <li><strong>Best for:</strong> Production systems where strict token budget management is critical.</li>
+          <li><strong>Library:</strong> <span class="mono">TokenTextSplitter</span></li>
+        </ul>
+      </div>
+
+      <div class="strategy-card s2">
+        <span class="st-tag" style="color:var(--l2)">Strategy 8 · Advanced</span>
+        <h4>Agentic / Proposition-Based</h4>
+        <p>An LLM rewrites the document into atomic, standalone factual statements before chunking.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Feed paragraphs to an LLM → Extract self-contained propositions ("The refund window is 30 days") → Each proposition becomes a chunk.</li>
+          <li><strong>Pros/Cons:</strong> Highest retrieval precision possible <em>but</em> very expensive (one LLM call per paragraph) and slow.</li>
+          <li><strong>Best for:</strong> High-stakes Q&A (legal, compliance) where precision matters more than cost.</li>
+        </ul>
+      </div>
+
+      <div class="strategy-card s3">
+        <span class="st-tag" style="color:var(--l3)">Strategy 9 · Production Staple</span>
+        <h4>Hierarchical / Parent-Child</h4>
+        <p>Index small chunks for precision search, but pass larger parent chunks to the LLM for context generation.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Search against Child chunks (128-256 tokens) → Pass mapped Parent chunk (512-1024 tokens) to LLM.</li>
+          <li><strong>Pros/Cons:</strong> Combines precision with context richness <em>but</em> requires more complex pipelines and double storage.</li>
+          <li><strong>Best for:</strong> Long documents where context around a fact matters.</li>
+          <li><strong>Library:</strong> <span class="mono">ParentDocumentRetriever</span></li>
+        </ul>
+      </div>
+
+      <div class="strategy-card s4">
+        <span class="st-tag" style="color:var(--l4)">Strategy 10</span>
+        <h4>Sliding Window Chunking</h4>
+        <p>Chunks overlap heavily — each new chunk slides forward by a fixed step.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Chunk size 512, step 256 → 50% of every chunk is shared with the next.</li>
+          <li><strong>Pros/Cons:</strong> No info lost at boundaries <em>but</em> high storage overhead (2x chunks) and more retrieval noise.</li>
+          <li><strong>Best for:</strong> Medical records, contracts — where missing a boundary word is unacceptable.</li>
+          <li><strong>Library:</strong> Any splitter with high <span class="mono">chunk_overlap</span></li>
+        </ul>
+      </div>
+
+      <div class="strategy-card s5" style="grid-column: 1 / -1;">
+        <span class="st-tag" style="color:var(--l5)">Strategy 11 · Newest Approach (2024)</span>
+        <h4>Late Chunking</h4>
+        <p>Embed the full document first, then split — preserving cross-chunk context in the embeddings.</p>
+        <ul class="feature-list">
+          <li><strong>How it works:</strong> Pass the entire document through an embedding model (e.g., jina-embeddings-v3) → Use token-level output embeddings directly → Pool into chunks post-embedding.</li>
+          <li><strong>Pros/Cons:</strong> Eliminates context-loss because each chunk's embedding "knows about" the rest of the document <em>but</em> requires a long-context embedding model and lacks widespread tooling support.</li>
+          <li><strong>Best for:</strong> Documents where every section references concepts from other sections (e.g. legal contracts, research papers).</li>
+          <li><strong>Library:</strong> <span class="mono">chonkie</span> (Late chunker), Jina AI implementations.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top:40px;">Chunking Strategies — Quick Comparison Summary</h3>
+    <p style="color:var(--muted);margin-bottom:16px;"><strong>Rule of thumb:</strong> Start with <span class="mono">RecursiveCharacterTextSplitter</span> (512 tokens, 10% overlap) → upgrade to <span class="mono">SemanticChunker</span> or <span class="mono">ParentDocumentRetriever</span> once you are actively measuring retrieval quality.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Strategy</th>
+            <th>Semantic Quality</th>
+            <th>Speed</th>
+            <th>Complexity</th>
+            <th>Best Default?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Fixed-Size</strong></td><td><span class="badge red">⭐ Poor</span></td><td><span class="badge green">⚡ Fastest</span></td><td>Simple</td><td>Dev only</td></tr>
+          <tr><td><strong>Sentence-Based</strong></td><td><span class="badge yellow">⭐⭐ Moderate</span></td><td><span class="badge green">⚡ Fast</span></td><td>Easy</td><td>✓</td></tr>
+          <tr><td><strong>Paragraph-Based</strong></td><td><span class="badge yellow">⭐⭐ Moderate</span></td><td><span class="badge green">⚡ Fast</span></td><td>Easy</td><td>✓</td></tr>
+          <tr><td><strong>Recursive</strong></td><td><span class="badge green">⭐⭐⭐ Good</span></td><td><span class="badge green">⚡ Fast</span></td><td>Easy</td><td><span class="badge teal">✅ Yes</span></td></tr>
+          <tr><td><strong>Semantic</strong></td><td><span class="badge teal">⭐⭐⭐⭐⭐ Best</span></td><td><span class="badge red">🐢 Slow</span></td><td>Advanced</td><td>Production</td></tr>
+          <tr><td><strong>Structure-Aware</strong></td><td><span class="badge teal">⭐⭐⭐⭐ Great</span></td><td><span class="badge green">⚡ Fast</span></td><td>Moderate</td><td>Structured docs</td></tr>
+          <tr><td><strong>Token-Based</strong></td><td><span class="badge yellow">⭐⭐ Moderate</span></td><td><span class="badge green">⚡ Fast</span></td><td>Easy</td><td>Cost-critical</td></tr>
+          <tr><td><strong>Agentic/Proposition</strong></td><td><span class="badge teal">⭐⭐⭐⭐⭐ Best</span></td><td><span class="badge red">🐢 Slowest</span></td><td>Complex</td><td>High-stakes</td></tr>
+          <tr><td><strong>Parent-Child</strong></td><td><span class="badge teal">⭐⭐⭐⭐ Great</span></td><td><span class="badge yellow">Medium</span></td><td>Moderate</td><td><span class="badge teal">✅ Production</span></td></tr>
+          <tr><td><strong>Sliding Window</strong></td><td><span class="badge green">⭐⭐⭐ Good</span></td><td><span class="badge yellow">Medium</span></td><td>Easy</td><td>High-recall</td></tr>
+          <tr><td><strong>Late Chunking</strong></td><td><span class="badge teal">⭐⭐⭐⭐⭐ Best</span></td><td><span class="badge yellow">Medium</span></td><td>Advanced</td><td>Cross-ref docs</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<section class="layer-section l3" id="layer3">
+  <div class="container">
+    <div class="layer-header">
+      <div class="layer-icon-big l3-color">3</div>
+      <div class="layer-header-text">
+        <div class="layer-eyebrow l3-txt">Layer 03 · Offline Pipeline</div>
+        <h2>Embedding Generation</h2>
+        <p class="layer-desc">Convert text chunks into dense numerical vectors that capture semantic meaning. These vectors are the mathematical "fingerprints" that enable similarity-based retrieval.</p>
+      </div>
+    </div>
+
+    <div class="sec-img"><img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=55" alt="Neural network embeddings"></div>
+    <p class="img-caption">Each text chunk becomes a vector of hundreds or thousands of floating-point numbers representing its position in semantic space.</p>
+
+    <h3>Embedding Generation Process</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Step</th><th>Description</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge green">1</span></td><td>Tokenize input text</td><td><span class="mono">"Hello world" → [254, 567, 123]</span></td></tr>
+          <tr><td><span class="badge green">2</span></td><td>Pass through neural network (transformer encoder)</td><td>Attention layers extract meaning</td></tr>
+          <tr><td><span class="badge green">3</span></td><td>Apply pooling (mean, CLS, or max)</td><td>Combine token embeddings into one vector</td></tr>
+          <tr><td><span class="badge green">4</span></td><td>Normalize (L2 normalization)</td><td>Scale to unit length for cosine similarity</td></tr>
+          <tr><td><span class="badge green">5</span></td><td>Output vector</td><td><span class="mono">[0.12, -0.45, 0.78, ...]</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Embedding Models — Full Comparison</h3>
+    <p style="color:var(--muted);margin-bottom:16px;">A comprehensive feature matrix across all major embedding models. MTEB scores are from the Massive Text Embedding Benchmark (higher = better).</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Dims</th>
+            <th>Context (tokens)</th>
+            <th>MTEB Score</th>
+            <th>Multilingual</th>
+            <th>Matryoshka</th>
+            <th>Latency</th>
+            <th>Cost / 1M tokens</th>
+            <th>Hosting</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>OpenAI text-embedding-3-small</strong></td>
+            <td>1,536 (flex)</td><td>8,191</td>
+            <td><span class="badge green">62.3</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>~100ms</td>
+            <td><span class="badge green">$0.02</span></td>
+            <td>API only</td>
+            <td>Cost-efficient general RAG</td>
+          </tr>
+          <tr>
+            <td><strong>OpenAI text-embedding-3-large</strong></td>
+            <td>3,072 (flex)</td><td>8,191</td>
+            <td><span class="badge teal">64.6</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>~150ms</td>
+            <td><span class="badge yellow">$0.13</span></td>
+            <td>API only</td>
+            <td>Max accuracy, multilingual</td>
+          </tr>
+          <tr>
+            <td><strong>OpenAI text-embedding-ada-002</strong></td>
+            <td>1,536</td><td>8,191</td>
+            <td><span class="badge">61.0</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~100ms</td>
+            <td><span class="badge green">$0.10</span></td>
+            <td>API only</td>
+            <td>Legacy systems (superseded by v3)</td>
+          </tr>
+          <tr>
+            <td><strong>Cohere embed-english-v3.0</strong></td>
+            <td>1,024</td><td>512</td>
+            <td><span class="badge teal">64.5</span></td>
+            <td><span class="badge red">English only</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~120ms</td>
+            <td><span class="badge orange">$0.10</span></td>
+            <td>API only</td>
+            <td>Retrieval-optimized English RAG</td>
+          </tr>
+          <tr>
+            <td><strong>Cohere embed-multilingual-v3.0</strong></td>
+            <td>1,024</td><td>512</td>
+            <td><span class="badge green">62.9</span></td>
+            <td><span class="badge teal">Yes — 100+ langs</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~120ms</td>
+            <td><span class="badge orange">$0.10</span></td>
+            <td>API only</td>
+            <td>Global/multilingual search</td>
+          </tr>
+          <tr>
+            <td><strong>BGE-large-en-v1.5</strong></td>
+            <td>1,024</td><td>512</td>
+            <td><span class="badge teal">63.98</span></td>
+            <td><span class="badge red">English only</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~80ms (GPU)</td>
+            <td><span class="badge green">Free</span></td>
+            <td>Self-hosted</td>
+            <td>High-quality open-source RAG</td>
+          </tr>
+          <tr>
+            <td><strong>BGE-m3</strong></td>
+            <td>1,024</td><td>8,192</td>
+            <td><span class="badge teal">64.8</span></td>
+            <td><span class="badge teal">Yes — 100+ langs</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~100ms (GPU)</td>
+            <td><span class="badge green">Free</span></td>
+            <td>Self-hosted</td>
+            <td>Multilingual + long docs (open source)</td>
+          </tr>
+          <tr>
+            <td><strong>all-MiniLM-L6-v2</strong></td>
+            <td>384</td><td>256</td>
+            <td><span class="badge yellow">56.3</span></td>
+            <td><span class="badge red">English only</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge green">~20ms (CPU)</span></td>
+            <td><span class="badge green">Free</span></td>
+            <td>Self-hosted</td>
+            <td>Dev/prototyping, edge devices</td>
+          </tr>
+          <tr>
+            <td><strong>all-mpnet-base-v2</strong></td>
+            <td>768</td><td>384</td>
+            <td><span class="badge">57.8</span></td>
+            <td><span class="badge red">English only</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~40ms (CPU)</td>
+            <td><span class="badge green">Free</span></td>
+            <td>Self-hosted</td>
+            <td>High-quality CPU-only baseline</td>
+          </tr>
+          <tr>
+            <td><strong>Voyage-2</strong></td>
+            <td>1,024</td><td>4,000</td>
+            <td><span class="badge green">62.4</span></td>
+            <td><span class="badge yellow">Limited</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~110ms</td>
+            <td><span class="badge">$0.10</span></td>
+            <td>API only</td>
+            <td>General RAG</td>
+          </tr>
+          <tr>
+            <td><strong>Voyage-large-2-instruct</strong></td>
+            <td>1,536</td><td>16,000</td>
+            <td><span class="badge teal">65.1</span></td>
+            <td><span class="badge yellow">Limited</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~130ms</td>
+            <td><span class="badge yellow">$0.12</span></td>
+            <td>API only</td>
+            <td>Long documents, instruction-following</td>
+          </tr>
+          <tr>
+            <td><strong>Voyage-code-2</strong></td>
+            <td>1,536</td><td>16,000</td>
+            <td><span class="badge teal">—</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~130ms</td>
+            <td><span class="badge yellow">$0.12</span></td>
+            <td>API only</td>
+            <td>Code search and retrieval</td>
+          </tr>
+          <tr>
+            <td><strong>Mistral Embed</strong></td>
+            <td>1,024</td><td>8,192</td>
+            <td><span class="badge green">60.5</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>~90ms</td>
+            <td><span class="badge green">$0.10</span></td>
+            <td>API only</td>
+            <td>Mistral ecosystem, multilingual</td>
+          </tr>
+          <tr>
+            <td><strong>Jina Embeddings v3</strong></td>
+            <td>1,024</td><td>8,192</td>
+            <td><span class="badge green">61.4</span></td>
+            <td><span class="badge teal">Yes — 89 langs</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>~100ms</td>
+            <td><span class="badge green">$0.02</span></td>
+            <td>API + Self-hosted</td>
+            <td>Long-context multilingual RAG</td>
+          </tr>
+          <tr>
+            <td><strong>Nomic Embed Text v1.5</strong></td>
+            <td>768</td><td>8,192</td>
+            <td><span class="badge green">62.4</span></td>
+            <td><span class="badge red">English only</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>~60ms (GPU)</td>
+            <td><span class="badge green">Free</span></td>
+            <td>Self-hosted</td>
+            <td>Open-source long-context RAG</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Embedding Model Decision Matrix</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Your Priority</th><th>Recommended Model</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>🏆 Best overall quality</td><td><strong>OpenAI text-embedding-3-large</strong></td><td>Top MTEB score, Matryoshka, multilingual</td></tr>
+          <tr><td>💰 Best cost/quality balance</td><td><strong>OpenAI text-embedding-3-small</strong></td><td>Near-large quality at 6.5× cheaper</td></tr>
+          <tr><td>🌍 Multilingual (open source)</td><td><strong>BGE-m3</strong></td><td>100+ languages, 8K context, free</td></tr>
+          <tr><td>🔒 On-premise / no cloud</td><td><strong>BGE-large-en-v1.5 or BGE-m3</strong></td><td>Self-hostable, strong MTEB, free</td></tr>
+          <tr><td>⚡ Lowest latency (CPU)</td><td><strong>all-MiniLM-L6-v2</strong></td><td>384 dims, runs fast on CPU, free</td></tr>
+          <tr><td>💻 Code search / code RAG</td><td><strong>Voyage-code-2</strong></td><td>Specifically fine-tuned on code</td></tr>
+          <tr><td>📄 Long documents (&gt;512 tokens)</td><td><strong>Voyage-large-2-instruct</strong> or <strong>BGE-m3</strong></td><td>16K and 8K context windows</td></tr>
+          <tr><td>💲 Cheapest possible</td><td><strong>Jina v3 or all-MiniLM-L6-v2</strong></td><td>$0.02/1M (Jina) or Free (MiniLM)</td></tr>
+          <tr><td>🔎 Retrieval-optimized (English)</td><td><strong>Cohere embed-english-v3.0</strong></td><td>Trained specifically on retrieval tasks</td></tr>
+          <tr><td>📐 Variable storage needs</td><td><strong>OpenAI v3 or Nomic v1.5</strong></td><td>Matryoshka — truncate dims to trade quality for speed</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Matryoshka Embeddings — What It Means</h3>
+    <div class="callout info">
+      <div class="callout-icon">🪆</div>
+      <div class="callout-body"><p><strong>Matryoshka Representation Learning (MRL)</strong> trains the model so that the first N dimensions of a large embedding are themselves a high-quality smaller embedding. This means you can truncate <span class="mono">text-embedding-3-large</span> from 3,072 → 256 dims and still get strong retrieval quality — cutting storage and query costs dramatically with minimal accuracy loss.</p></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Truncated Dims</th><th>Relative MTEB Score</th><th>Storage vs Full</th><th>Use Case</th></tr></thead>
+        <tbody>
+          <tr><td>3,072 (full)</td><td><span class="badge teal">100%</span></td><td>100%</td><td>Max accuracy, production search</td></tr>
+          <tr><td>1,536</td><td><span class="badge green">~99.5%</span></td><td>50%</td><td>Balanced — recommended sweet spot</td></tr>
+          <tr><td>512</td><td><span class="badge green">~98%</span></td><td>17%</td><td>High throughput with minimal quality loss</td></tr>
+          <tr><td>256</td><td><span class="badge yellow">~95%</span></td><td>8%</td><td>Edge / latency-critical applications</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Real-World Example</h3>
+    <div class="code-wrap">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">EMBEDDING OUTPUT (SIMPLIFIED)</div></div>
+      <div class="code-body">
+<span class="cc"># Input text chunk:</span>
+<span class="cs">"The company provides 20 days of paid vacation annually. Employees can carry over up to 5 unused days."</span>
+
+<span class="cc"># Output embedding (1536 dims — showing first 10):</span>
+[<span class="cn">0.023</span>, <span class="cn">-0.456</span>, <span class="cn">0.789</span>, <span class="cn">-0.123</span>, <span class="cn">0.345</span>, <span class="cn">-0.678</span>, <span class="cn">0.901</span>, <span class="cn">-0.234</span>, <span class="cn">0.567</span>, <span class="cn">-0.890</span>, ...]
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body"><p><strong>Critical Rule:</strong> Always use the <strong>same embedding model</strong> for indexing (Layer 3) and querying (Layer 5). Mismatched models produce incompatible vector spaces — retrieval will fail silently.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="layer-section l4" id="layer4">
+  <div class="container">
+    <div class="layer-header">
+      <div class="layer-icon-big l4-color">4</div>
+      <div class="layer-header-text">
+        <div class="layer-eyebrow l4-txt">Layer 04 · Offline Pipeline</div>
+        <h2>Vector Storage &amp; Indexing</h2>
+        <p class="layer-desc">Store embeddings in a specialized database optimized for fast similarity search. The index structure determines whether you can search millions of vectors in milliseconds or minutes.</p>
+      </div>
+    </div>
+
+    <div class="sec-img"><img src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1200&auto=format&fit=crop&q=55" alt="Database server racks"></div>
+
+    <h3>Vector Database — Full Feature Comparison</h3>
+    <p style="color:var(--muted);margin-bottom:16px;">A detailed breakdown of every major vector database across 12 key dimensions.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Database</th>
+            <th>Type</th>
+            <th>Open Source</th>
+            <th>Managed Cloud</th>
+            <th>Self-Hosted</th>
+            <th>Hybrid Search</th>
+            <th>Metadata Filtering</th>
+            <th>Multi-tenancy</th>
+            <th>Persistence</th>
+            <th>Max Vectors</th>
+            <th>Python SDK</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Pinecone</strong></td>
+            <td>Managed cloud</td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge teal">Yes (sparse+dense)</span></td>
+            <td><span class="badge green">Rich</span></td>
+            <td><span class="badge green">Namespaces</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Billions+</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Zero-ops production, enterprise</td>
+          </tr>
+          <tr>
+            <td><strong>Weaviate</strong></td>
+            <td>Hybrid</td>
+            <td><span class="badge green">Yes (BSD)</span></td>
+            <td><span class="badge green">Yes (WCS)</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge teal">Yes (BM25 built-in)</span></td>
+            <td><span class="badge green">Rich — GraphQL</span></td>
+            <td><span class="badge green">Multi-tenancy API</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Billions</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Hybrid search, GraphQL queries</td>
+          </tr>
+          <tr>
+            <td><strong>Qdrant</strong></td>
+            <td>Hybrid</td>
+            <td><span class="badge green">Yes (Apache 2.0)</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge teal">Yes (sparse vectors)</span></td>
+            <td><span class="badge green">Rich — payload filters</span></td>
+            <td><span class="badge green">Collections</span></td>
+            <td><span class="badge green">Yes (WAL)</span></td>
+            <td>Billions</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>High perf + complex filtering</td>
+          </tr>
+          <tr>
+            <td><strong>Milvus / Zilliz</strong></td>
+            <td>Distributed</td>
+            <td><span class="badge green">Yes (Apache 2.0)</span></td>
+            <td><span class="badge green">Yes (Zilliz)</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge green">Collections</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Tens of billions</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Billion+ vector scale, Kubernetes</td>
+          </tr>
+          <tr>
+            <td><strong>Chroma</strong></td>
+            <td>Embedded</td>
+            <td><span class="badge green">Yes (Apache 2.0)</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge green">Yes (in-process)</span></td>
+            <td><span class="badge yellow">Partial (keyword only)</span></td>
+            <td><span class="badge yellow">Basic</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge green">Yes (SQLite)</span></td>
+            <td>~1M (practical)</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Local dev, prototyping, notebooks</td>
+          </tr>
+          <tr>
+            <td><strong>FAISS</strong></td>
+            <td>C++ Library</td>
+            <td><span class="badge green">Yes (Meta / MIT)</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge red">No</span></td>
+            <td><span class="badge yellow">Manual (index save/load)</span></td>
+            <td>Billions (GPU)</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Research, custom builds, GPU clusters</td>
+          </tr>
+          <tr>
+            <td><strong>pgvector</strong></td>
+            <td>Postgres extension</td>
+            <td><span class="badge green">Yes (MIT)</span></td>
+            <td><span class="badge teal">Via any Postgres host</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge teal">Yes (FTS + vector)</span></td>
+            <td><span class="badge green">Full SQL WHERE</span></td>
+            <td><span class="badge green">Postgres schemas</span></td>
+            <td><span class="badge green">Yes (ACID)</span></td>
+            <td>~10M practical</td>
+            <td><span class="badge green">Yes (psycopg2)</span></td>
+            <td>Teams already on Postgres</td>
+          </tr>
+          <tr>
+            <td><strong>Elasticsearch</strong></td>
+            <td>Full-text + vector</td>
+            <td><span class="badge yellow">Source available</span></td>
+            <td><span class="badge green">Yes (Elastic Cloud)</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge teal">Yes — native BM25+ANN</span></td>
+            <td><span class="badge green">Very rich</span></td>
+            <td><span class="badge green">Indices</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Billions</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Teams with existing ES infrastructure</td>
+          </tr>
+          <tr>
+            <td><strong>Redis (Vector Search)</strong></td>
+            <td>In-memory + vector</td>
+            <td><span class="badge green">Yes (Redis CE)</span></td>
+            <td><span class="badge green">Yes (Redis Cloud)</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge yellow">Partial</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge yellow">Databases</span></td>
+            <td><span class="badge yellow">Configurable (RDB/AOF)</span></td>
+            <td>~100M (RAM limited)</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Ultra-low latency, caching + search</td>
+          </tr>
+          <tr>
+            <td><strong>LanceDB</strong></td>
+            <td>Embedded columnar</td>
+            <td><span class="badge green">Yes (Apache 2.0)</span></td>
+            <td><span class="badge green">Yes (LanceDB Cloud)</span></td>
+            <td><span class="badge green">Yes</span></td>
+            <td><span class="badge teal">Yes (FTS + ANN)</span></td>
+            <td><span class="badge green">Yes — SQL WHERE</span></td>
+            <td><span class="badge yellow">Tables</span></td>
+            <td><span class="badge green">Yes (Lance format)</span></td>
+            <td>Billions</td>
+            <td><span class="badge green">Yes</span></td>
+            <td>Serverless, multimodal, no infrastructure</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Vector DB Selection Guide</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Your Scenario</th><th>Best Choice</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Starting a new project, want zero ops</td><td><span class="badge teal">Pinecone or Zilliz Cloud</span></td><td>Fully managed, no infra to worry about</td></tr>
+          <tr><td>Need full SQL-level metadata filtering</td><td><span class="badge green">pgvector or Weaviate</span></td><td>SQL WHERE clauses / rich GraphQL</td></tr>
+          <tr><td>Already running Postgres</td><td><span class="badge green">pgvector</span></td><td>No new infra — just add an extension</td></tr>
+          <tr><td>Already running Elasticsearch</td><td><span class="badge">Elasticsearch kNN</span></td><td>Native BM25 + dense vector hybrid</td></tr>
+          <tr><td>Billions of vectors, on-premise</td><td><span class="badge purple">Milvus</span></td><td>Distributed, battle-tested at scale</td></tr>
+          <tr><td>Local development only</td><td><span class="badge yellow">Chroma or LanceDB</span></td><td>Embedded, zero setup, persists to disk</td></tr>
+          <tr><td>Sub-millisecond query latency</td><td><span class="badge">Redis Vector Search</span></td><td>In-memory, ~0.5ms at small scale</td></tr>
+          <tr><td>GPU research / custom indexes</td><td><span class="badge">FAISS</span></td><td>Direct control, IVF+PQ at any scale</td></tr>
+          <tr><td>Serverless / pay-per-query</td><td><span class="badge teal">LanceDB Cloud or Pinecone Serverless</span></td><td>No idle cost when traffic is bursty</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Index Types — Full Comparison</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Index Type</th><th>Algorithm</th><th>Time Complexity</th><th>Accuracy</th><th>Memory Usage</th><th>Build Time</th><th>Supports GPU</th><th>Best Scale</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge">Flat (Brute Force)</span></td>
+            <td>Exact nearest-neighbor</td><td>O(n)</td>
+            <td><span class="badge teal">100% exact</span></td>
+            <td>High (all vectors in RAM)</td>
+            <td><span class="badge green">Instant</span></td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>&lt; 10K</td>
+            <td>Dev/testing, tiny datasets</td>
+          </tr>
+          <tr>
+            <td><span class="badge yellow">IVF (Inverted File)</span></td>
+            <td>Cluster → search nearest buckets</td><td>O(√n)</td>
+            <td><span class="badge green">95–99%</span></td>
+            <td>Medium</td>
+            <td>Minutes</td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>1M – 100M</td>
+            <td>Medium-scale production search</td>
+          </tr>
+          <tr>
+            <td><span class="badge teal">HNSW</span></td>
+            <td>Hierarchical navigable small world graph</td><td>O(log n)</td>
+            <td><span class="badge teal">95–99.9%</span></td>
+            <td>High (graph stored in RAM)</td>
+            <td>Minutes–Hours</td>
+            <td><span class="badge red">No (CPU only)</span></td>
+            <td>10K – 1B</td>
+            <td>Production RAG — best speed/accuracy</td>
+          </tr>
+          <tr>
+            <td><span class="badge purple">PQ (Product Quantization)</span></td>
+            <td>Compress vectors into codes</td><td>O(n) but fast</td>
+            <td><span class="badge yellow">90–95%</span></td>
+            <td><span class="badge teal">Very Low (8–16× compression)</span></td>
+            <td>Hours</td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>100M – Billions</td>
+            <td>Massive scale, memory-constrained</td>
+          </tr>
+          <tr>
+            <td><span class="badge orange">IVF + PQ</span></td>
+            <td>Cluster then compress</td><td>O(√n) approx</td>
+            <td><span class="badge yellow">90–96%</span></td>
+            <td><span class="badge teal">Very Low</span></td>
+            <td>Hours</td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>1B+</td>
+            <td>Billion-scale production (FAISS IVF_PQ)</td>
+          </tr>
+          <tr>
+            <td><span class="badge red">LSH (Locality-Sensitive Hashing)</span></td>
+            <td>Hash similar vectors to same bucket</td><td>O(1) amortized</td>
+            <td><span class="badge red">70–90% (high variance)</span></td>
+            <td>Low</td>
+            <td><span class="badge green">Fast</span></td>
+            <td><span class="badge red">No</span></td>
+            <td>10M – 100M</td>
+            <td>Streaming/near-real-time indexing</td>
+          </tr>
+          <tr>
+            <td><span class="badge">ScaNN</span></td>
+            <td>Anisotropic quantization (Google)</td><td>Sub-linear</td>
+            <td><span class="badge teal">Very High</span></td>
+            <td>Medium</td>
+            <td>Hours</td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>100M – Billions</td>
+            <td>Google-scale, highest throughput</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Index Selection Guide</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Dataset Size</th><th>Recommended Index</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>&lt; 10,000 vectors</td><td><span class="badge">Flat (brute force)</span></td><td>Simple, exact, fast enough</td></tr>
+          <tr><td>10K – 1M vectors</td><td><span class="badge teal">HNSW</span></td><td>Best balance of speed and accuracy</td></tr>
+          <tr><td>1M – 100M vectors</td><td><span class="badge yellow">IVF + PQ</span></td><td>Memory efficient, scalable</td></tr>
+          <tr><td>&gt; 100M vectors</td><td><span class="badge purple">Milvus IVF_PQ</span></td><td>Distributed, production-scale</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── IVFFlat Deep Dive ── -->
+    <h3>IVFFlat — Deep Dive</h3>
+    <p style="color:var(--muted);margin-bottom:20px;">IVFFlat (Inverted File Index + Flat Storage) is a two-stage approximate nearest-neighbor algorithm that dramatically reduces search time by partitioning vectors into clusters and searching only a subset of them.</p>
+
+    <div class="vis-card-grid" style="margin-bottom:28px;">
+      <div class="vis-card" style="border-color:rgba(41,182,246,.3);">
+        <div class="vis-card-icon">📂</div>
+        <h4 style="color:var(--l4);">IVF — Inverted File Index</h4>
+        <p>Splits the entire embedding space into <strong>N clusters</strong> using a k-means–style training phase. Each vector is assigned to its nearest cluster centroid. At query time, only the top-<em>k</em> closest clusters are searched.</p>
+      </div>
+      <div class="vis-card" style="border-color:rgba(41,182,246,.3);">
+        <div class="vis-card-icon">📐</div>
+        <h4 style="color:var(--l4);">Flat — No Compression</h4>
+        <p>Vectors are stored <strong>exactly as-is</strong> — no quantization or compression applied. Inside each searched cluster, similarity is computed precisely against every stored vector, yielding exact scores within the searched partition.</p>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">How IVFFlat Works — Step by Step</h4>
+
+    <div class="strategy-grid" style="margin-bottom:32px;">
+      <div class="strategy-card s1">
+        <span class="st-tag" style="color:var(--l1)">Step 1</span>
+        <h4>Training Phase</h4>
+        <ul class="feature-list">
+          <li>System considers <strong>all embeddings</strong> in the corpus.</li>
+          <li>Groups them into clusters using a technique similar to <strong>k-means</strong> — semantically similar embeddings are placed in the same cluster.</li>
+          <li>Cluster centroids are stored for fast proximity lookups at query time.</li>
+        </ul>
+      </div>
+      <div class="strategy-card s2">
+        <span class="st-tag" style="color:var(--l2)">Step 2</span>
+        <h4>Approximate Cluster Search <span class="mono" style="font-size:11px;">nprobe = k</span></h4>
+        <ul class="feature-list">
+          <li>Query embedding is compared against all <strong>cluster centroids</strong>.</li>
+          <li>Only the <strong>top-k clusters</strong> (controlled by <span class="mono">nprobe</span>) are selected for deeper search.</li>
+        </ul>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;padding:10px 12px;background:rgba(255,112,67,.08);border:1px solid rgba(255,112,67,.25);border-radius:8px;font-size:12px;">
+            <strong style="color:var(--l1);">Low nprobe</strong><br>Fast but may miss the answer (higher latency risk)
+          </div>
+          <div style="flex:1;min-width:140px;padding:10px 12px;background:rgba(102,187,106,.08);border:1px solid rgba(102,187,106,.25);border-radius:8px;font-size:12px;">
+            <strong style="color:var(--l3);">High nprobe</strong><br>Slower search but much better recall
+          </div>
+        </div>
+      </div>
+      <div class="strategy-card s3">
+        <span class="st-tag" style="color:var(--l3)">Step 3</span>
+        <h4>Exact Search Inside Selected Clusters (FLAT)</h4>
+        <ul class="feature-list">
+          <li>For every vector inside the selected clusters, <strong>exact cosine / dot-product similarity</strong> is computed.</li>
+          <li>This is the "Flat" in IVFFlat — no approximation inside the cluster; full precision search.</li>
+        </ul>
+      </div>
+      <div class="strategy-card s4">
+        <span class="st-tag" style="color:var(--l4)">Step 4</span>
+        <h4>Return Top-K Results</h4>
+        <ul class="feature-list">
+          <li>Collect all scored candidates from searched clusters.</li>
+          <li>Rank by similarity score.</li>
+          <li>Return the top-K documents to the retrieval layer.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">IVFFlat — Debugging Wrong Answers</h4>
+    <p style="color:var(--muted);margin-bottom:16px;">When RAG returns a wrong answer, narrow it down to one of three root causes:</p>
+
+    <div class="table-wrap" style="margin-bottom:32px;">
+      <table>
+        <thead><tr><th>Scenario</th><th>Root Cause</th><th>Symptoms</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge orange">Scenario 1</span></td>
+            <td><strong>Embedding Problem</strong></td>
+            <td>Query: "How does IVFFlat work?" → Document: "Based on Nearest Neighbors technique" — different semantic space</td>
+            <td>Switch to a higher-quality or domain-tuned embedding model</td>
+          </tr>
+          <tr>
+            <td><span class="badge yellow">Scenario 2</span></td>
+            <td><strong>Indexing Problem</strong></td>
+            <td>Relevant document exists, embedding is correct, but it was assigned to a cluster that was <em>not</em> searched</td>
+            <td>Increase <span class="mono">nlist</span> (more clusters) or improve training data distribution</td>
+          </tr>
+          <tr>
+            <td><span class="badge red">Scenario 3</span></td>
+            <td><strong>Retrieval Configuration</strong></td>
+            <td>Good embeddings, correct index — but <span class="mono">nprobe</span> is too low; relevant cluster skipped</td>
+            <td>Increase <span class="mono">nprobe</span> to search more clusters per query</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout tip" style="margin-bottom:40px;">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <p><strong>IVFFlat Debugging Checklist:</strong> (1) Is the relevant document in the database? (2) Can the embedding represent its meaning? (3) Does the indexing allow reaching that document? (4) Did the query configuration (nprobe) restrict the search space enough to miss it?</p>
+      </div>
+    </div>
+
+    <div class="code-wrap" style="margin-bottom:40px;">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PYTHON · FAISS IVFFlat — SETUP &amp; TUNING</div></div>
+      <div class="code-body">
+<span class="ck">import</span> faiss
+<span class="ck">import</span> numpy <span class="ck">as</span> np
+
+<span class="cc"># Build IVFFlat index</span>
+d        = <span class="cn">1536</span>          <span class="cc"># embedding dimensions</span>
+nlist    = <span class="cn">100</span>           <span class="cc"># number of clusters (≈ sqrt(N) is a good start)</span>
+quantizer = faiss.<span class="cf">IndexFlatL2</span>(d)
+index     = faiss.<span class="cf">IndexIVFFlat</span>(quantizer, d, nlist)
+
+<span class="cc"># Training phase — must train before adding vectors</span>
+index.<span class="cf">train</span>(embeddings)     <span class="cc"># embeddings shape: (N, d)</span>
+index.<span class="cf">add</span>(embeddings)
+
+<span class="cc"># Query — tune nprobe for speed vs recall trade-off</span>
+index.nprobe = <span class="cn">5</span>            <span class="cc"># search top-5 clusters (increase for better recall)</span>
+D, I = index.<span class="cf">search</span>(query_vec, k=<span class="cn">10</span>)
+      </div>
+    </div>
+
+    <!-- ── HNSW Deep Dive ── -->
+    <h3>HNSW — Deep Dive</h3>
+    <p style="color:var(--muted);margin-bottom:20px;">HNSW (Hierarchical Navigable Small World) is a graph-based approximate nearest-neighbor index. It builds a multi-layer graph where each vector is connected to nearby vectors, enabling extremely fast traversal from coarse to fine-grained search.</p>
+
+    <div class="vis-card-grid" style="margin-bottom:28px;">
+      <div class="vis-card" style="border-color:rgba(38,198,218,.3);">
+        <div class="vis-card-icon">🌐</div>
+        <h4 style="color:var(--l7);">Graph Structure</h4>
+        <p>Each embedding becomes a <strong>node</strong> in a graph. Nodes connect to semantically nearby neighbors. The graph is <strong>hierarchical</strong> — multiple layers, not flat.</p>
+      </div>
+      <div class="vis-card" style="border-color:rgba(38,198,218,.3);">
+        <div class="vis-card-icon">⚡</div>
+        <h4 style="color:var(--l7);">Why It's Fast</h4>
+        <p>Upper layers are <strong>sparse</strong> — few nodes, big jumps across vector space. Lower layers are <strong>dense</strong> — fine-grained local search. Search navigates from top to bottom, narrowing in on the answer.</p>
+      </div>
+      <div class="vis-card" style="border-color:rgba(38,198,218,.3);">
+        <div class="vis-card-icon">🎯</div>
+        <h4 style="color:var(--l7);">Why It's Accurate</h4>
+        <p>Unlike cluster-based methods, HNSW never hard-partitions the space. Every query navigates a continuous graph, so relevant neighbors are rarely missed — giving <strong>very strong recall</strong>.</p>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">How HNSW Works — Step by Step</h4>
+
+    <div class="strategy-grid" style="margin-bottom:32px;">
+      <div class="strategy-card s1">
+        <span class="st-tag" style="color:var(--l1)">Step 1</span>
+        <h4>Graph Construction</h4>
+        <ul class="feature-list">
+          <li>Each embedding is inserted as a <strong>node</strong> in the graph.</li>
+          <li>Each node connects to a set of <strong>nearby nodes</strong> (neighbors).</li>
+          <li>Semantically similar embeddings are likely to be connected.</li>
+          <li>The graph has <strong>multiple layers</strong> — it is hierarchical, not flat.</li>
+        </ul>
+      </div>
+      <div class="strategy-card s2">
+        <span class="st-tag" style="color:var(--l2)">Step 2</span>
+        <h4>Upper Layers Are Sparse</h4>
+        <ul class="feature-list">
+          <li>At the top layer there are <strong>fewer nodes and fewer paths</strong>.</li>
+          <li>These layers enable <strong>big jumps</strong> across the entire vector space quickly, navigating from one region to another in a small number of hops.</li>
+        </ul>
+      </div>
+      <div class="strategy-card s3">
+        <span class="st-tag" style="color:var(--l3)">Step 3</span>
+        <h4>Lower Layers Are Dense</h4>
+        <ul class="feature-list">
+          <li>As you descend the hierarchy, layers contain <strong>more nodes and more connections</strong>.</li>
+          <li>This provides fine-grained local resolution for precise neighbor selection.</li>
+        </ul>
+      </div>
+      <div class="strategy-card s4">
+        <span class="st-tag" style="color:var(--l4)">Step 4</span>
+        <h4>Query Starts from the Top</h4>
+        <ul class="feature-list">
+          <li>The query vector enters the graph and is connected to the nearest entry-point node at the <strong>top layer</strong>.</li>
+          <li>At each layer, the algorithm moves toward nodes closer to the query embedding.</li>
+          <li>This rapidly gets the traversal into the <strong>right region</strong> of the vector space.</li>
+        </ul>
+      </div>
+      <div class="strategy-card s5">
+        <span class="st-tag" style="color:var(--l5)">Step 5</span>
+        <h4>Refine While Moving Down Layers</h4>
+        <ul class="feature-list">
+          <li>Once a promising area is found, the algorithm descends one layer.</li>
+          <li>The graph is now more detailed — navigate through <strong>closer neighbors</strong>.</li>
+          <li>Continue descending, refining the candidate set at each layer.</li>
+        </ul>
+      </div>
+      <div class="strategy-card" style="border-color:rgba(38,198,218,.2);background:rgba(38,198,218,.04);">
+        <span class="st-tag" style="color:var(--l7)">Step 6</span>
+        <h4 style="color:var(--l7);">Final Nearest Neighbors</h4>
+        <ul class="feature-list">
+          <li>At the <strong>lowest (densest) layer</strong>, the algorithm performs its finest-grained search.</li>
+          <li>Identifies the top-K nearest vectors and returns the best match.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="vis-card-grid" style="margin-bottom:28px;">
+      <div class="vis-card" style="border-color:rgba(38,198,218,.25);background:rgba(38,198,218,.04);">
+        <div class="vis-card-icon">✅</div>
+        <h4 style="color:var(--l7);">HNSW Advantages</h4>
+        <ul class="feature-list">
+          <li>Very <strong>fast search</strong> — O(log n) complexity</li>
+          <li>Very <strong>strong recall</strong> — graph traversal rarely misses the true nearest neighbors</li>
+          <li>Very <strong>good quality</strong> nearest neighbors, even at billion-vector scale</li>
+        </ul>
+      </div>
+      <div class="vis-card" style="border-color:rgba(239,83,80,.25);background:rgba(239,83,80,.04);">
+        <div class="vis-card-icon">⚖️</div>
+        <h4 style="color:var(--l6);">HNSW Trade-offs</h4>
+        <ul class="feature-list">
+          <li><strong>Cons:</strong> Higher memory usage (entire graph stored in RAM), slower build time, more complex than simpler indexing methods</li>
+          <li><strong>Pros:</strong> Very fast query performance, high recall, excellent for nearest-neighbor search at scale</li>
+        </ul>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">HNSW Key Tuning Parameters</h4>
+    <div class="table-wrap" style="margin-bottom:28px;">
+      <table>
+        <thead><tr><th>Parameter</th><th>Controls</th><th>Effect of Higher Value</th><th>Effect of Lower Value</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="mono">M</span></td>
+            <td>Number of connections each node keeps in the graph</td>
+            <td>Better graph quality, higher recall — but more memory</td>
+            <td>Lower memory, faster build — but weaker connectivity</td>
+          </tr>
+          <tr>
+            <td><span class="mono">ef_construction</span></td>
+            <td>Effort used while <em>building</em> the graph</td>
+            <td>Better graph quality — but slower build time</td>
+            <td>Faster build — but lower graph quality</td>
+          </tr>
+          <tr>
+            <td><span class="mono">ef_search</span></td>
+            <td>Effort used during <em>querying</em></td>
+            <td>Explores more candidates → usually improves recall</td>
+            <td>Faster search — but may miss better neighbors</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">HNSW — Debugging Wrong Retrievals</h4>
+    <div class="table-wrap" style="margin-bottom:28px;">
+      <table>
+        <thead><tr><th>Check</th><th>Question to Ask</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge teal">1</span></td><td>Is the document present in the index?</td><td>Verify insertion; check index size</td></tr>
+          <tr><td><span class="badge teal">2</span></td><td>Is the embedding good / semantically accurate?</td><td>Test embedding model on domain-specific queries</td></tr>
+          <tr><td><span class="badge yellow">3</span></td><td>Is <span class="mono">ef_search</span> too low?</td><td>Increase <span class="mono">ef_search</span> — allows exploring more candidates</td></tr>
+          <tr><td><span class="badge yellow">4</span></td><td>Is graph quality poor? (low <span class="mono">M</span> or <span class="mono">ef_construction</span>)</td><td>Rebuild index with higher <span class="mono">M</span> and <span class="mono">ef_construction</span></td></tr>
+          <tr><td><span class="badge orange">5</span></td><td>Is ranking the issue after retrieval?</td><td>Add a cross-encoder reranker (Layer 6)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-wrap" style="margin-bottom:40px;">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PYTHON · HNSW — SETUP &amp; TUNING (hnswlib)</div></div>
+      <div class="code-body">
+<span class="ck">import</span> hnswlib
+<span class="ck">import</span> numpy <span class="ck">as</span> np
+
+<span class="cc"># Build HNSW index</span>
+dim   = <span class="cn">1536</span>
+index = hnswlib.<span class="cf">Index</span>(space=<span class="cs">'cosine'</span>, dim=dim)
+
+<span class="cc"># ef_construction: build quality; M: connections per node</span>
+index.<span class="cf">init_index</span>(max_elements=<span class="cn">1_000_000</span>, ef_construction=<span class="cn">200</span>, M=<span class="cn">16</span>)
+index.<span class="cf">add_items</span>(embeddings, ids)
+
+<span class="cc"># ef_search: query effort — raise for better recall</span>
+index.ef = <span class="cn">50</span>
+labels, distances = index.<span class="cf">knn_query</span>(query_vec, k=<span class="cn">10</span>)
+
+<span class="cc"># Rule of thumb:
+#   M           = 16–64   (higher = better quality, more RAM)
+#   ef_construction = 100–500 (higher = better index, slower build)
+#   ef_search   = 50–200  (higher = better recall, slower query)</span>
+      </div>
+    </div>
+
+    <h3>IVFFlat vs HNSW — Comparison</h3>
+    <div class="table-wrap" style="margin-bottom:40px;">
+      <table>
+        <thead><tr><th>Dimension</th><th>IVFFlat</th><th>HNSW</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Algorithm</strong></td><td>Cluster-based (k-means partitions)</td><td>Graph-based (navigable small world)</td></tr>
+          <tr><td><strong>Search Speed</strong></td><td><span class="badge yellow">Fast (tunable via nprobe)</span></td><td><span class="badge teal">Very Fast (O log n)</span></td></tr>
+          <tr><td><strong>Recall</strong></td><td><span class="badge yellow">Good (95–99%) — depends on nprobe</span></td><td><span class="badge teal">Excellent (95–99.9%)</span></td></tr>
+          <tr><td><strong>Memory Usage</strong></td><td><span class="badge green">Medium</span></td><td><span class="badge orange">High (graph in RAM)</span></td></tr>
+          <tr><td><strong>Build Time</strong></td><td>Minutes</td><td>Minutes–Hours</td></tr>
+          <tr><td><strong>GPU Support</strong></td><td><span class="badge teal">Yes</span></td><td><span class="badge red">No (CPU only)</span></td></tr>
+          <tr><td><strong>Key Tuning Knob</strong></td><td><span class="mono">nprobe</span> (clusters to search)</td><td><span class="mono">M</span>, <span class="mono">ef_construction</span>, <span class="mono">ef_search</span></td></tr>
+          <tr><td><strong>Best Scale</strong></td><td>1M – 100M vectors</td><td>10K – 1B vectors</td></tr>
+          <tr><td><strong>Miss-answer Root Cause</strong></td><td>nprobe too low → wrong cluster</td><td>ef_search too low → graph traversal cuts short</td></tr>
+          <tr><td><strong>Best Use Case</strong></td><td>Medium-scale production, GPU clusters</td><td>Default production RAG — best speed/accuracy balance</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Three Layers of RAG Problems ── -->
+    <h3>The Three Layers of RAG Problems</h3>
+    <p style="color:var(--muted);margin-bottom:20px;">Think of RAG as a library: the embedding is how you write book summaries, indexing is how you organize shelves, and retrieval config is how you search the catalog. Debugging starts by identifying which layer is failing.</p>
+
+    <div class="table-wrap" style="margin-bottom:36px;">
+      <table>
+        <thead><tr><th>Layer</th><th>Library Analogy</th><th>Question to Ask</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge orange">Embedding</span></td><td>How you write book summaries</td><td>Are the summaries capturing the right meaning?</td></tr>
+          <tr><td><span class="badge yellow">Indexing</span></td><td>How you organize books on shelves</td><td>Can you find the right shelf quickly?</td></tr>
+          <tr><td><span class="badge purple">Retrieval Config</span></td><td>How you search the catalog</td><td>Are you asking the right questions to the librarian?</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Problem 1: Embedding -->
+    <div class="strategy-card s1" style="margin-bottom:24px;">
+      <span class="st-tag" style="color:var(--l1)">Problem Layer 1</span>
+      <h4>Embedding Problem</h4>
+      <p style="margin-bottom:12px;">The quality of the vector representations themselves — bad embeddings mean bad retrieval, regardless of how well-tuned the rest of the pipeline is.</p>
+
+      <p style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;">SYMPTOMS</p>
+      <ul class="feature-list" style="margin-bottom:14px;">
+        <li>Retrieved chunks seem semantically unrelated to the query</li>
+        <li>Semantic drift — results are about wrong topics</li>
+        <li>Different embedding models give dramatically different results</li>
+      </ul>
+
+      <p style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;">ROOT CAUSES</p>
+      <ul class="feature-list" style="margin-bottom:14px;">
+        <li>Using a generic embedding model for a specialized domain (medical/legal)</li>
+        <li>Embedding model too small (e.g., 384-dim vs 1536-dim)</li>
+        <li>Chunk too large or too small for effective embedding</li>
+        <li>Mismatch between query embedding and document embedding models</li>
+      </ul>
+
+      <div class="code-wrap" style="margin-bottom:14px;">
+        <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PYTHON · DIAGNOSE EMBEDDING QUALITY</div></div>
+        <div class="code-body">
+<span class="cc"># Manual sanity check — cosine similarity on clearly relevant pair</span>
+query     = <span class="cs">"What are the side effects of aspirin?"</span>
+doc       = <span class="cs">"Aspirin can cause stomach bleeding"</span>
+
+similarity = <span class="cf">cosine_similarity</span>(<span class="cf">embed</span>(query), <span class="cf">embed</span>(doc))
+<span class="cc"># If similarity &lt; 0.5 for clearly relevant pairs → embedding problem</span>
+
+<span class="cc"># Better: check relevant pairs score higher than random pairs</span>
+relevant_pairs = [(<span class="cs">"query1"</span>, <span class="cs">"doc1"</span>), (<span class="cs">"query2"</span>, <span class="cs">"doc2"</span>)]
+        </div>
+      </div>
+
+      <p style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;">SOLUTIONS</p>
+      <ul class="feature-list">
+        <li>Switch embedding models (OpenAI → BGE → E5 → Voyage)</li>
+        <li>Fine-tune embedding model on your domain data</li>
+        <li>Adjust chunking strategy (smaller, more focused chunks)</li>
+        <li>Use hybrid search (sparse + dense embeddings)</li>
+      </ul>
+    </div>
+
+    <!-- Problem 2: Indexing -->
+    <div class="strategy-card s2" style="margin-bottom:24px;">
+      <span class="st-tag" style="color:var(--l2)">Problem Layer 2</span>
+      <h4>Indexing Problem</h4>
+      <p style="margin-bottom:12px;">How vectors are stored, organized, and searched efficiently — a bad index makes fast, accurate retrieval impossible no matter how good your embeddings are.</p>
+
+      <p style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;">SYMPTOMS</p>
+      <ul class="feature-list" style="margin-bottom:14px;">
+        <li>Search is very slow (seconds instead of milliseconds)</li>
+        <li>Results are inconsistent between runs</li>
+        <li>Missing obvious matches that should be found</li>
+        <li>High memory usage or disk I/O bottlenecks</li>
+      </ul>
+
+      <p style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;">ROOT CAUSES</p>
+      <ul class="feature-list" style="margin-bottom:14px;">
+        <li>No index created — falling back to brute-force sequential scan</li>
+        <li>Wrong index type chosen (IVFFlat vs HNSW mismatch for data size)</li>
+        <li>Poor index parameters (e.g., <span class="mono">lists=10</span> for 1M vectors)</li>
+        <li>Index not rebuilt after major data changes</li>
+      </ul>
+
+      <div class="code-wrap" style="margin-bottom:14px;">
+        <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">SQL · DIAGNOSE INDEX USAGE (pgvector)</div></div>
+        <div class="code-body">
+<span class="cc">-- Check if index is actually being used</span>
+<span class="ck">EXPLAIN ANALYZE</span>
+<span class="ck">SELECT</span> * <span class="ck">FROM</span> documents
+<span class="ck">ORDER BY</span> embedding &lt;=&gt; query_embedding
+<span class="ck">LIMIT</span> <span class="cn">10</span>;
+<span class="cc">-- Look for "Index Scan" vs "Seq Scan"
+-- Seq Scan = ❌ indexing problem</span>
+
+<span class="cc">-- Create appropriate HNSW index</span>
+<span class="ck">CREATE INDEX ON</span> documents
+<span class="ck">USING</span> hnsw (embedding vector_cosine_ops)
+<span class="ck">WITH</span> (m = <span class="cn">16</span>, ef_construction = <span class="cn">64</span>);
+
+<span class="cc">-- Or tune IVFFlat for large datasets</span>
+<span class="ck">CREATE INDEX ON</span> documents
+<span class="ck">USING</span> ivfflat (embedding vector_cosine_ops)
+<span class="ck">WITH</span> (lists = <span class="cn">1000</span>);  <span class="cc">-- For 1M rows</span>
+
+<span class="cc">-- Rebuild after major changes</span>
+<span class="ck">REINDEX INDEX</span> documents_embedding_idx;
+        </div>
+      </div>
+
+      <p style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;">INDEXING CHEAT SHEET</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dataset Size</th><th>Best Index</th><th>Parameter Guidance</th></tr></thead>
+          <tbody>
+            <tr><td>&lt; 10K vectors</td><td><span class="badge">None (brute force)</span></td><td>N/A — flat exact search is fast enough</td></tr>
+            <tr><td>10K – 100K</td><td><span class="badge yellow">IVFFlat</span></td><td><span class="mono">lists = sqrt(rows)</span></td></tr>
+            <tr><td>100K – 1M</td><td><span class="badge yellow">IVFFlat or HNSW</span></td><td><span class="mono">lists = rows / 1000</span></td></tr>
+            <tr><td>&gt; 1M vectors</td><td><span class="badge teal">HNSW</span></td><td><span class="mono">m = 16, ef_construction = 200</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Problem 3: Retrieval Config -->
+    <div class="strategy-card s3" style="margin-bottom:24px;">
+      <span class="st-tag" style="color:var(--l3)">Problem Layer 3</span>
+      <h4>Retrieval Configuration Problem</h4>
+      <p style="margin-bottom:12px;">Parameters and logic used at query time — good embeddings and a fast index can still produce poor answers if the retrieval pipeline is misconfigured.</p>
+
+      <p style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;">SYMPTOMS</p>
+      <ul class="feature-list" style="margin-bottom:14px;">
+        <li>Too few relevant results returned</li>
+        <li>Good results exist but are ranked poorly</li>
+        <li>Results are relevant but the context window gets overwhelmed</li>
+        <li>Works for simple queries but fails for specific or rare terms</li>
+      </ul>
+
+      <div class="code-wrap" style="margin-bottom:14px;">
+        <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PYTHON · DIAGNOSE RETRIEVAL METRICS</div></div>
+        <div class="code-body">
+retrieved_chunks  = <span class="cf">vector_search</span>(query, top_k=<span class="cn">10</span>)
+human_relevance   = [<span class="cn">1</span>, <span class="cn">1</span>, <span class="cn">0</span>, <span class="cn">1</span>, <span class="cn">0</span>, <span class="cn">0</span>, <span class="cn">1</span>, <span class="cn">0</span>, <span class="cn">0</span>, <span class="cn">0</span>]  <span class="cc"># manual labels</span>
+
+recall_at_5    = <span class="cf">sum</span>(human_relevance[:<span class="cn">5</span>]) / <span class="cf">sum</span>(human_relevance)
+<span class="cc"># recall_at_5 &lt; 0.8  → retrieval config problem</span>
+
+precision_at_5 = <span class="cf">sum</span>(human_relevance[:<span class="cn">5</span>]) / <span class="cn">5</span>
+<span class="cc"># precision &lt; 0.6 AND recall is high → too many irrelevant chunks</span>
+        </div>
+      </div>
+
+      <div class="code-wrap" style="margin-bottom:14px;">
+        <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PYTHON · OPTIMIZED RETRIEVAL CONFIG</div></div>
+        <div class="code-body">
+retrieval_config = {
+    <span class="cc"># Core parameters</span>
+    <span class="cy">"top_k"</span>:               <span class="cn">10</span>,    <span class="cc"># retrieve more, then rerank</span>
+    <span class="cy">"similarity_threshold"</span>: <span class="cn">0.65</span>,  <span class="cc"># lower threshold → fewer misses</span>
+
+    <span class="cc"># Hybrid search</span>
+    <span class="cy">"use_hybrid_search"</span>:   <span class="ck">True</span>,
+    <span class="cy">"dense_weight"</span>:        <span class="cn">0.6</span>,
+    <span class="cy">"sparse_weight"</span>:       <span class="cn">0.4</span>,   <span class="cc"># BM25 handles exact keyword matches</span>
+
+    <span class="cc"># Cross-encoder reranking</span>
+    <span class="cy">"use_reranker"</span>:        <span class="ck">True</span>,
+    <span class="cy">"reranker_model"</span>:      <span class="cs">"cross-encoder/ms-marco-MiniLM-L-6-v2"</span>,
+    <span class="cy">"reranker_top_k"</span>:      <span class="cn">5</span>,     <span class="cc"># final results after reranking</span>
+
+    <span class="cc"># Chunking</span>
+    <span class="cy">"chunk_size"</span>:          <span class="cn">512</span>,
+    <span class="cy">"chunk_overlap"</span>:       <span class="cn">50</span>,
+    <span class="cy">"use_sentence_window"</span>: <span class="ck">True</span>,  <span class="cc"># include surrounding sentences</span>
+}
+        </div>
+      </div>
+    </div>
+
+    <!-- Symptom → Problem comparison -->
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">Symptom → Root Cause Lookup</h4>
+    <div class="table-wrap" style="margin-bottom:28px;">
+      <table>
+        <thead><tr><th>Symptom</th><th>Most Likely Problem</th></tr></thead>
+        <tbody>
+          <tr><td>Good results exist but search is slow (&gt;500ms)</td><td><span class="badge yellow">Indexing</span></td></tr>
+          <tr><td>Results are fast but wrong / irrelevant content</td><td><span class="badge orange">Embedding</span></td></tr>
+          <tr><td>Results are relevant but missing critical info</td><td><span class="badge purple">Retrieval Config — top_k too low</span></td></tr>
+          <tr><td>Search crashes or OOM errors</td><td><span class="badge yellow">Indexing — wrong parameters</span></td></tr>
+          <tr><td>Works for simple queries, fails for complex ones</td><td><span class="badge orange">Embedding — model too simple</span></td></tr>
+          <tr><td>Results are random / inconsistent between runs</td><td><span class="badge yellow">Indexing — low-recall approximate index</span></td></tr>
+          <tr><td>Retrieved chunks are relevant but context window overflows</td><td><span class="badge purple">Retrieval Config — chunk size too large</span></td></tr>
+          <tr><td>Different embedding models give completely different results</td><td><span class="badge orange">Embedding — model choice</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Debugging Flowchart -->
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">Debugging Flowchart</h4>
+    <div class="code-wrap" style="margin-bottom:28px;">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">DEBUG FLOWCHART</div></div>
+      <div class="code-body">
+<span class="cc">Start: Bad RAG results</span>
+         ↓
+<span class="ck">Is search FAST?</span> (&lt;<span class="cn">100</span>ms)
+  ↓ No  → <span class="cf">INDEXING PROBLEM</span>   (create / optimize index)
+  ↓ Yes
+<span class="ck">Are TOP results relevant?</span> (manually check first <span class="cn">3</span>)
+  ↓ No  → <span class="cf">EMBEDDING PROBLEM</span>   (try a different or larger model)
+  ↓ Yes (but incomplete)
+<span class="ck">Are MORE results (positions 4–10) relevant?</span>
+  ↓ Yes → <span class="cf">RETRIEVAL CONFIG</span>    (increase top_k)
+  ↓ No, but should be
+<span class="ck">Is similarity threshold filtering too aggressive?</span>
+  ↓ Yes → <span class="cf">RETRIEVAL CONFIG</span>    (lower threshold)
+  ↓ No
+<span class="ck">Is reranking available but not used?</span>
+  ↓ Yes → <span class="cf">RETRIEVAL CONFIG</span>    (add cross-encoder reranker)
+  ↓ No
+→ Return to <span class="cf">EMBEDDING PROBLEM</span>  (model needs fine-tuning)
+      </div>
+    </div>
+
+    <!-- Real-World Example -->
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">Real-World Example — Medical QA System</h4>
+    <div class="callout warn" style="margin-bottom:16px;">
+      <div class="callout-icon">🏥</div>
+      <div class="callout-body"><p><strong>Problem:</strong> Medical QA system returns results about "chest pain" for the query "heart attack symptoms" — seemingly related but missing the most critical documents.</p></div>
+    </div>
+    <div class="code-wrap" style="margin-bottom:28px;">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PYTHON · DEBUG WALKTHROUGH</div></div>
+      <div class="code-body">
+<span class="cc"># Step 1 — Check embeddings</span>
+<span class="cf">cosine_sim</span>(<span class="cs">"heart attack"</span>, <span class="cs">"chest pain"</span>) = <span class="cn">0.85</span>  <span class="cc">✅ embeddings are fine</span>
+
+<span class="cc"># Step 2 — Check index</span>
+<span class="cc"># EXPLAIN shows Index Scan ✅ search is fast</span>
+
+<span class="cc"># Step 3 — Check retrieval config</span>
+<span class="cc"># top_k = 3, no reranking → root cause found</span>
+
+<span class="cc"># Fix: add reranker and increase top_k</span>
+<span class="cc"># Before</span>
+<span class="cf">retrieve</span>(query, top_k=<span class="cn">3</span>)
+
+<span class="cc"># After</span>
+initial_results = <span class="cf">retrieve</span>(query, top_k=<span class="cn">20</span>)
+reranked        = cross_encoder.<span class="cf">rerank</span>(query, initial_results)
+final_results   = reranked[:<span class="cn">5</span>]   <span class="cc"># now includes the right heart attack docs</span>
+
+<span class="cc"># Root cause: Retrieval Config — insufficient top_k + missing reranker</span>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <h4 style="margin-bottom:16px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">Debug Priority Summary</h4>
+    <div class="table-wrap" style="margin-bottom:40px;">
+      <table>
+        <thead><tr><th>Problem Layer</th><th>Key Questions to Ask</th><th>Fix Priority</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge orange">Embedding</span></td>
+            <td>Are vectors semantically meaningful? Do relevant pairs score high?</td>
+            <td><span class="badge red">High — fix first (quality foundation)</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge yellow">Indexing</span></td>
+            <td>Is search efficient? Is the right index type and size used?</td>
+            <td><span class="badge yellow">Medium — fix for speed</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge purple">Retrieval Config</span></td>
+            <td>Are parameters (top_k, threshold, reranker) tuned for the use case?</td>
+            <td><span class="badge green">Lower — tune last</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout danger" style="margin-bottom:40px;">
+      <div class="callout-icon">🚨</div>
+      <div class="callout-body"><p><strong>Debug in order:</strong> First ensure embeddings are good (quality foundation), then create the right index for speed, finally tune retrieval config for your specific use case. <strong>Do not optimize indexing if your embeddings are garbage</strong> — you will just find the wrong results faster.</p></div>
+    </div>
+
+    <h3>Stored Record Example</h3>
+    <div class="code-wrap">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">JSON · VECTOR DB RECORD</div></div>
+      <div class="code-body">
+{
+  <span class="cy">"id"</span>:     <span class="cs">"chunk_001234"</span>,
+  <span class="cy">"vector"</span>: [<span class="cn">0.023</span>, <span class="cn">-0.456</span>, <span class="cn">0.789</span>, ...],  <span class="cc">// 1536 dimensions</span>
+  <span class="cy">"text"</span>:   <span class="cs">"The company provides 20 days of paid vacation annually..."</span>,
+  <span class="cy">"metadata"</span>: {
+    <span class="cy">"source"</span>:        <span class="cs">"employee_handbook_2024.pdf"</span>,
+    <span class="cy">"page"</span>:          <span class="cn">3</span>,
+    <span class="cy">"section"</span>:       <span class="cs">"Vacation Policy"</span>,
+    <span class="cy">"last_modified"</span>: <span class="cs">"2024-01-15"</span>,
+    <span class="cy">"doc_id"</span>:        <span class="cs">"HR-2024-001"</span>
+  }
+}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="layer-section l5" id="layer5">
+  <div class="container">
+    <div class="layer-header">
+      <div class="layer-icon-big l5-color">5</div>
+      <div class="layer-header-text">
+        <div class="layer-eyebrow l5-txt">Layer 05 · Online Pipeline</div>
+        <h2>Query Processing &amp; Retrieval</h2>
+        <p class="layer-desc">Convert a user's natural language question into an embedding, search the vector database, and return the most semantically similar text chunks. This is the first online layer.</p>
+      </div>
+    </div>
+
+    <div class="sec-img"><img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=55" alt="Search and retrieval"></div>
+
+    <h3>Query Processing Steps</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Step</th><th>Description</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge purple">1</span></td><td>Query understanding (optional)</td><td>Expand or rewrite for clarity</td></tr>
+          <tr><td><span class="badge purple">2</span></td><td>Embed query</td><td>Convert question to vector using same model as Layer 3</td></tr>
+          <tr><td><span class="badge purple">3</span></td><td>Search vector DB</td><td>Find top-K nearest neighbors</td></tr>
+          <tr><td><span class="badge purple">4</span></td><td>Apply metadata filters</td><td>Filter by date, source, department</td></tr>
+          <tr><td><span class="badge purple">5</span></td><td>Return results</td><td>Chunks + similarity scores + metadata</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="strategy-card s1">
+      <span class="st-tag" style="color:var(--l1)">Strategy 1 · Simplest</span>
+      <h4>Simple Similarity Search</h4>
+      <p>Embed query → Find top-K most similar vectors. Fast and straightforward but may miss contextually relevant, lexically different chunks.</p>
+    </div>
+
+    <div class="strategy-card s2">
+      <span class="st-tag" style="color:var(--l2)">Strategy 2 · Recommended</span>
+      <h4>Hybrid Search (Keyword + Vector)</h4>
+      <p>Combine vector similarity with BM25/TF-IDF keyword matching. Use <strong>Reciprocal Rank Fusion (RRF)</strong> to merge scores. Best of both worlds — captures semantic meaning AND exact keyword matches (product names, IDs, jargon).</p>
+    </div>
+
+    <div class="strategy-card s3">
+      <span class="st-tag" style="color:var(--l3)">Strategy 3</span>
+      <h4>Multi-Query Retrieval</h4>
+      <p>Generate multiple query variations using an LLM → Retrieve for each → Deduplicate and combine. Captures different angles of the user's question.</p>
+      <div class="code-wrap" style="margin-top:14px;">
+        <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">MULTI-QUERY EXAMPLE</div></div>
+        <div class="code-body">
+<span class="cc"># Original query:</span>
+<span class="cs">"What is the vacation policy?"</span>
+
+<span class="cc"># LLM-generated variations:</span>
+<span class="cs">"How many paid time off days do employees get?"</span>
+<span class="cs">"Annual leave policy for full-time staff"</span>
+<span class="cs">"Vacation accrual and carryover rules"</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="strategy-card s4">
+      <span class="st-tag" style="color:var(--l4)">Strategy 4 · Advanced</span>
+      <h4>HyDE — Hypothetical Document Embeddings</h4>
+      <p>Generate a <em>hypothetical answer</em> to the query first → Embed that answer → Search with answer embedding (not query embedding). Often better aligned with answer-relevant documents.</p>
+    </div>
+
+    <div class="strategy-card s5">
+      <span class="st-tag" style="color:var(--l5)">Strategy 5 · Advanced</span>
+      <h4>Self-Query Retrieval</h4>
+      <p>LLM extracts structured metadata filters from natural language. <em>"Show me 2024 HR policies about vacation"</em> → automatically applies filter <span class="mono">year=2024, dept="HR", topic="vacation"</span>.</p>
+    </div>
+
+    <h3>Real-World Retrieval Results</h3>
+    <div class="callout info">
+      <div class="callout-icon">🔍</div>
+      <div class="callout-body"><p><strong>Query:</strong> "What is the maximum vacation carryover?" → Top 3 results returned:</p></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Rank</th><th>Score</th><th>Chunk Text</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge green">1</span></td><td>0.92</td><td>"Employees can carry over up to 5 unused vacation days to the next calendar year."</td></tr>
+          <tr><td><span class="badge yellow">2</span></td><td>0.85</td><td>"Carryover requests must be submitted by December 15th."</td></tr>
+          <tr><td><span class="badge orange">3</span></td><td>0.71</td><td>"Any days beyond 5 will be forfeited at year end."</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="layer-section l6" id="layer6">
+  <div class="container">
+    <div class="layer-header">
+      <div class="layer-icon-big l6-color">6</div>
+      <div class="layer-header-text">
+        <div class="layer-eyebrow l6-txt">Layer 06 · Online Pipeline</div>
+        <h2>Reranking &amp; Filtering</h2>
+        <p class="layer-desc">Improve retrieval quality by reordering, filtering, or pruning retrieved chunks using more sophisticated relevance signals than pure vector similarity. Turns good retrieval into great retrieval.</p>
+      </div>
+    </div>
+
+    <div class="sec-img"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&auto=format&fit=crop&q=55" alt="Sorting and filtering data"></div>
+
+    <div class="two-compare">
+      <div class="cmp-box bad">
+        <div class="cmp-label bad-l">Without Reranking</div>
+        <p>Vector similarity misses nuanced relevance · Top results may be only lexically similar · No diversity in results · Fixed K includes irrelevant chunks</p>
+      </div>
+      <div class="cmp-box good">
+        <div class="cmp-label good-l">With Reranking</div>
+        <p>Cross-encoders capture deeper relevance · Semantic relevance properly prioritized · MMR ensures result diversity · Score threshold removes noise</p>
+      </div>
+    </div>
+
+    <h3>The Reranking Pipeline</h3>
+    <div class="rerank-pipe">
+      <div class="rp-step"><div class="rp-icon">🔍</div><div class="rp-body"><h5>Layer 5 Output: 20–100 chunks</h5><p>Fast approximate retrieval via vector similarity — casts a wide net</p></div></div>
+      <div class="rp-arrow">↓</div>
+      <div class="rp-step"><div class="rp-icon">🧠</div><div class="rp-body"><h5>Cross-Encoder Reranking</h5><p>Scores each (query, chunk) pair — slow but highly accurate. Assigns 0–1 relevance score to each chunk.</p></div></div>
+      <div class="rp-arrow">↓</div>
+      <div class="rp-step"><div class="rp-icon">🎨</div><div class="rp-body"><h5>MMR Diversity Optimization</h5><p>Balances relevance with diversity. Prevents 5 nearly identical chunks from dominating the context.</p></div></div>
+      <div class="rp-arrow">↓</div>
+      <div class="rp-step"><div class="rp-icon">✂️</div><div class="rp-body"><h5>Score Threshold Filtering (≥ 0.5)</h5><p>Removes chunks below the relevance threshold. Sends only high-quality chunks to Layer 7.</p></div></div>
+      <div class="rp-arrow">↓</div>
+      <div class="rp-step" style="border-color:rgba(0,229,176,.3)"><div class="rp-icon">✅</div><div class="rp-body"><h5>Layer 6 Output: 5–10 high-quality chunks</h5><p>Precisely relevant, diverse, clean — ready for generation</p></div></div>
+    </div>
+
+    <h3>Bi-Encoder vs. Cross-Encoder</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Aspect</th><th>Bi-Encoder (Layer 5)</th><th>Cross-Encoder (Layer 6)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Processing</strong></td><td>Query and chunk embedded separately</td><td>Query and chunk processed <em>together</em></td></tr>
+          <tr><td><strong>Speed</strong></td><td><span class="badge green">Fast (pre-computed)</span></td><td><span class="badge orange">Slow (computed at query time)</span></td></tr>
+          <tr><td><strong>Accuracy</strong></td><td>Moderate</td><td><span class="badge teal">High</span></td></tr>
+          <tr><td><strong>Use case</strong></td><td>Initial retrieval (millions → hundreds)</td><td>Reranking (hundreds → tens)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Before vs. After Reranking</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Before (Vector Score)</th><th>Rank</th><th>After Cross-Encoder</th><th>Final Score</th></tr></thead>
+        <tbody>
+          <tr><td>"Employees get 20 days of PTO."</td><td>1→<b>1</b></td><td>"Employees get 20 days of PTO."</td><td><span class="badge green">0.98</span></td></tr>
+          <tr><td>"Company provides 20 vacation days."</td><td>2→<b>2</b></td><td>"Company provides 20 vacation days."</td><td><span class="badge green">0.96</span></td></tr>
+          <tr><td><s>"Sick leave policy: 10 days."</s></td><td>3→<b>5</b></td><td>"Vacation carryover: max 5 days."</td><td><span class="badge">0.85</span></td></tr>
+          <tr><td>"Vacation carryover: max 5 days."</td><td>4→<b>3</b></td><td>"How to request time off in Workday."</td><td><span class="badge yellow">0.62</span></td></tr>
+          <tr><td>"How to request time off."</td><td>5→<b>4</b></td><td><span style="color:var(--l6)">❌ Sick leave — filtered out (0.12)</span></td><td><span class="badge red">0.12</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Reranking Models — Full Comparison</h3>
+    <p style="color:var(--muted);margin-bottom:16px;">Cross-encoders score each (query, chunk) pair jointly — slower but far more accurate than bi-encoder similarity alone.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Architecture</th>
+            <th>Speed</th>
+            <th>Accuracy</th>
+            <th>Context (tokens)</th>
+            <th>Multilingual</th>
+            <th>Hosting</th>
+            <th>Cost</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Cohere Rerank v3</strong></td>
+            <td>Cross-encoder (proprietary)</td>
+            <td><span class="badge green">Fast (API)</span></td>
+            <td><span class="badge teal">Very High</span></td>
+            <td>4,096</td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>API only</td>
+            <td>$2/1K searches</td>
+            <td>Production — best quality + speed balance</td>
+          </tr>
+          <tr>
+            <td><strong>Cohere Rerank-Multilingual-v3</strong></td>
+            <td>Cross-encoder (proprietary)</td>
+            <td><span class="badge green">Fast (API)</span></td>
+            <td><span class="badge teal">Very High</span></td>
+            <td>4,096</td>
+            <td><span class="badge teal">Yes — 100+ langs</span></td>
+            <td>API only</td>
+            <td>$2/1K searches</td>
+            <td>Global multilingual RAG</td>
+          </tr>
+          <tr>
+            <td><strong>BGE-reranker-large</strong></td>
+            <td>XLM-RoBERTa cross-encoder</td>
+            <td><span class="badge red">Slow (GPU needed)</span></td>
+            <td><span class="badge teal">Very High</span></td>
+            <td>512</td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>Self-hosted</td>
+            <td><span class="badge green">Free</span></td>
+            <td>Best open-source quality</td>
+          </tr>
+          <tr>
+            <td><strong>BGE-reranker-base</strong></td>
+            <td>XLM-RoBERTa cross-encoder</td>
+            <td><span class="badge yellow">Moderate</span></td>
+            <td><span class="badge green">High</span></td>
+            <td>512</td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>Self-hosted</td>
+            <td><span class="badge green">Free</span></td>
+            <td>Balanced open-source option</td>
+          </tr>
+          <tr>
+            <td><strong>BGE-reranker-v2-m3</strong></td>
+            <td>BGE-M3 cross-encoder</td>
+            <td><span class="badge yellow">Moderate</span></td>
+            <td><span class="badge teal">Very High</span></td>
+            <td>8,192</td>
+            <td><span class="badge teal">Yes — 100+ langs</span></td>
+            <td>Self-hosted</td>
+            <td><span class="badge green">Free</span></td>
+            <td>Long docs + multilingual (open source)</td>
+          </tr>
+          <tr>
+            <td><strong>ms-marco-MiniLM-L-6-v2</strong></td>
+            <td>MiniLM cross-encoder</td>
+            <td><span class="badge green">Fast (CPU friendly)</span></td>
+            <td><span class="badge yellow">Moderate</span></td>
+            <td>512</td>
+            <td><span class="badge red">English only</span></td>
+            <td>Self-hosted</td>
+            <td><span class="badge green">Free</span></td>
+            <td>CPU-only or low-latency requirements</td>
+          </tr>
+          <tr>
+            <td><strong>Jina Reranker v2</strong></td>
+            <td>Cross-encoder</td>
+            <td><span class="badge green">Fast (API)</span></td>
+            <td><span class="badge green">High</span></td>
+            <td>8,192</td>
+            <td><span class="badge teal">Yes</span></td>
+            <td>API + Self-hosted</td>
+            <td>$0.07/1K searches</td>
+            <td>Long documents, low cost</td>
+          </tr>
+          <tr>
+            <td><strong>Voyage Rerank-1</strong></td>
+            <td>Cross-encoder (proprietary)</td>
+            <td><span class="badge green">Fast (API)</span></td>
+            <td><span class="badge teal">Very High</span></td>
+            <td>4,000</td>
+            <td><span class="badge yellow">Limited</span></td>
+            <td>API only</td>
+            <td>$0.05/1K searches</td>
+            <td>Voyage ecosystem users</td>
+          </tr>
+          <tr>
+            <td><strong>Mixedbread mxbai-rerank-large-v1</strong></td>
+            <td>DeBERTa-v3 cross-encoder</td>
+            <td><span class="badge yellow">Moderate</span></td>
+            <td><span class="badge teal">Very High</span></td>
+            <td>512</td>
+            <td><span class="badge red">English only</span></td>
+            <td>Self-hosted</td>
+            <td><span class="badge green">Free</span></td>
+            <td>Highest open-source English accuracy</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Reranker Selection Guide</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Your Scenario</th><th>Best Reranker</th></tr></thead>
+        <tbody>
+          <tr><td>Production API with best quality</td><td><strong>Cohere Rerank v3</strong></td></tr>
+          <tr><td>Self-hosted, best quality</td><td><strong>BGE-reranker-large or mxbai-rerank-large-v1</strong></td></tr>
+          <tr><td>Multilingual + self-hosted</td><td><strong>BGE-reranker-v2-m3</strong></td></tr>
+          <tr><td>CPU only, fast inference</td><td><strong>ms-marco-MiniLM-L-6-v2</strong></td></tr>
+          <tr><td>Long documents (&gt;512 tokens)</td><td><strong>BGE-reranker-v2-m3 or Jina Reranker v2</strong></td></tr>
+          <tr><td>Cheapest API option</td><td><strong>Jina Reranker v2 ($0.07/1K)</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="layer-section l7" id="layer7">
+  <div class="container">
+    <div class="layer-header">
+      <div class="layer-icon-big l7-color">7</div>
+      <div class="layer-header-text">
+        <div class="layer-eyebrow l7-txt">Layer 07 · Online Pipeline</div>
+        <h2>Generation &amp; Response Synthesis</h2>
+        <p class="layer-desc">The final layer. Retrieved chunks are combined with the user's query and passed to an LLM to generate a coherent, accurate, cited answer grounded entirely in your documents.</p>
+      </div>
+    </div>
+
+    <div class="sec-img"><img src="https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=1200&auto=format&fit=crop&q=55" alt="AI generating response"></div>
+
+    <h3>Prompt Template for Generation</h3>
+    <div class="code-wrap">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">RAG GENERATION PROMPT TEMPLATE</div></div>
+      <div class="code-body">
+<span class="ck">[SYSTEM]</span>
+You are a helpful AI assistant. Answer based <span class="cs">ONLY</span> on the provided context.
+If the answer is not in the context, say <span class="cs">"I don't have enough information to answer that."</span>
+Cite sources using [<span class="cn">1</span>], [<span class="cn">2</span>], etc. Keep answer concise (max <span class="cn">3</span> sentences).
+
+<span class="ck">[CONTEXT]</span>
+[<span class="cn">1</span>] {chunk_1_text}  (<span class="cy">Source: {chunk_1_source}</span>)
+[<span class="cn">2</span>] {chunk_2_text}  (<span class="cy">Source: {chunk_2_source}</span>)
+[<span class="cn">3</span>] {chunk_3_text}  (<span class="cy">Source: {chunk_3_source}</span>)
+
+<span class="ck">[USER QUERY]</span>
+{user_question}
+
+<span class="ck">[ASSISTANT ANSWER]</span>
+      </div>
+    </div>
+
+    <h3>Generation Strategies</h3>
+    <div class="vis-card-grid">
+      <div class="vis-card">
+        <div class="vis-card-icon">📦</div>
+        <h4>Stuff (Simple Concat)</h4>
+        <p>Concatenate all chunks → send to LLM. Simple, single call. Limited by context window size.</p>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">🗺️</div>
+        <h4>Map-Reduce</h4>
+        <p>Map: answer from each chunk individually. Reduce: combine into final. Handles very long contexts but needs multiple LLM calls.</p>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">🔄</div>
+        <h4>Refine (Iterative)</h4>
+        <p>Start with first chunk → refine answer with each additional chunk sequentially. Builds progressively but slow.</p>
+      </div>
+      <div class="vis-card">
+        <div class="vis-card-icon">🏆</div>
+        <h4>Stuff + Rerank ← Best</h4>
+        <p>After reranking, stuff top-K chunks into prompt. Best quality for typical RAG use cases.</p>
+      </div>
+    </div>
+
+    <h3>LLM Selection for Generation</h3>
+    <p style="color:var(--muted);margin-bottom:16px;">Choosing the right generation model is the biggest lever on both quality and cost.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Context Window</th>
+            <th>Input Cost / 1M</th>
+            <th>Output Cost / 1M</th>
+            <th>Latency</th>
+            <th>Structured Output</th>
+            <th>Function Calling</th>
+            <th>RAG Quality</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>GPT-4o</strong></td><td>128K</td>
+            <td><span class="badge yellow">$5</span></td><td><span class="badge yellow">$15</span></td>
+            <td>Moderate</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge teal">Excellent</span></td>
+            <td>Best all-around quality + speed balance</td>
+          </tr>
+          <tr>
+            <td><strong>GPT-4o mini</strong></td><td>128K</td>
+            <td><span class="badge green">$0.15</span></td><td><span class="badge green">$0.60</span></td>
+            <td>Fast</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge green">Very Good</span></td>
+            <td>High-volume, cost-efficient RAG</td>
+          </tr>
+          <tr>
+            <td><strong>GPT-4 Turbo</strong></td><td>128K</td>
+            <td><span class="badge red">$10</span></td><td><span class="badge red">$30</span></td>
+            <td>Moderate</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge teal">Excellent</span></td>
+            <td>Complex multi-hop reasoning</td>
+          </tr>
+          <tr>
+            <td><strong>GPT-3.5 Turbo</strong></td><td>16K</td>
+            <td><span class="badge green">$0.50</span></td><td><span class="badge green">$1.50</span></td>
+            <td>Fast</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge yellow">Good</span></td>
+            <td>Simple Q&amp;A, high throughput</td>
+          </tr>
+          <tr>
+            <td><strong>Claude 3.5 Sonnet</strong></td><td>200K</td>
+            <td><span class="badge">$3</span></td><td><span class="badge yellow">$15</span></td>
+            <td>Moderate</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge teal">Excellent</span></td>
+            <td>Long context, faithfulness, safety</td>
+          </tr>
+          <tr>
+            <td><strong>Claude 3 Haiku</strong></td><td>200K</td>
+            <td><span class="badge green">$0.25</span></td><td><span class="badge green">$1.25</span></td>
+            <td>Very Fast</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge green">Very Good</span></td>
+            <td>Fastest Anthropic, very cheap</td>
+          </tr>
+          <tr>
+            <td><strong>Gemini 1.5 Pro</strong></td><td>2M (!)</td>
+            <td><span class="badge yellow">$3.50</span></td><td><span class="badge yellow">$10.50</span></td>
+            <td>Moderate</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge green">Very Good</span></td>
+            <td>Entire codebase in context (2M tokens)</td>
+          </tr>
+          <tr>
+            <td><strong>Gemini 1.5 Flash</strong></td><td>1M</td>
+            <td><span class="badge green">$0.075</span></td><td><span class="badge green">$0.30</span></td>
+            <td>Fast</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge yellow">Good</span></td>
+            <td>Cheapest long-context option</td>
+          </tr>
+          <tr>
+            <td><strong>Llama 3.1 70B</strong></td><td>128K</td>
+            <td><span class="badge teal">Free (self-hosted)</span></td><td><span class="badge teal">Free</span></td>
+            <td>Slow (local GPU)</td>
+            <td><span class="badge yellow">Partial</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge green">Very Good</span></td>
+            <td>No-data-egress, open weights</td>
+          </tr>
+          <tr>
+            <td><strong>Llama 3.1 8B</strong></td><td>128K</td>
+            <td><span class="badge teal">Free</span></td><td><span class="badge teal">Free</span></td>
+            <td>Fast (local)</td>
+            <td><span class="badge yellow">Partial</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge yellow">Good</span></td>
+            <td>Edge / on-device RAG</td>
+          </tr>
+          <tr>
+            <td><strong>Mistral Large</strong></td><td>32K</td>
+            <td><span class="badge">$8</span></td><td><span class="badge yellow">$24</span></td>
+            <td>Moderate</td>
+            <td><span class="badge teal">Yes</span></td><td><span class="badge teal">Yes</span></td>
+            <td><span class="badge green">Very Good</span></td>
+            <td>European data-residency, multilingual</td>
+          </tr>
+          <tr>
+            <td><strong>Mistral 7B</strong></td><td>32K</td>
+            <td><span class="badge teal">Free</span></td><td><span class="badge teal">Free</span></td>
+            <td>Fast (local)</td>
+            <td><span class="badge yellow">Partial</span></td><td><span class="badge yellow">Partial</span></td>
+            <td><span class="badge yellow">Moderate</span></td>
+            <td>Smallest capable open-source option</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>LLM Selection Guide for RAG</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Your Priority</th><th>Best Choice</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td>Best RAG quality overall</td><td><strong>GPT-4o or Claude 3.5 Sonnet</strong></td><td>Top faithfulness, citation accuracy</td></tr>
+          <tr><td>Best cost for high volume</td><td><strong>GPT-4o mini or Gemini 1.5 Flash</strong></td><td>$0.15–$0.075 input, solid quality</td></tr>
+          <tr><td>Longest context (whole codebase)</td><td><strong>Gemini 1.5 Pro (2M)</strong></td><td>2 million token window</td></tr>
+          <tr><td>No cloud / data-sovereignty</td><td><strong>Llama 3.1 70B (self-hosted)</strong></td><td>Open weights, on-premise</td></tr>
+          <tr><td>Lowest latency streaming</td><td><strong>Claude 3 Haiku or GPT-3.5 Turbo</strong></td><td>Fastest time-to-first-token</td></tr>
+          <tr><td>European data residency</td><td><strong>Mistral Large</strong></td><td>Hosted in EU, GDPR-friendly</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Generation Parameters</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Description</th><th>Recommended for RAG</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">temperature</span></td><td>Randomness (0 = deterministic, 1 = creative)</td><td><span class="badge green">0.1–0.3 for factual Q&amp;A</span></td></tr>
+          <tr><td><span class="mono">top_p</span></td><td>Nucleus sampling threshold</td><td>0.9–1.0</td></tr>
+          <tr><td><span class="mono">max_tokens</span></td><td>Maximum response length</td><td>256–1024</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Real-World End-to-End Output</h3>
+    <div class="code-wrap">
+      <div class="code-head"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">FINAL RAG ANSWER WITH CITATIONS</div></div>
+      <div class="code-body">
+<span class="cc"># User Query:</span>
+<span class="cs">"How many vacation days do I get and can I carry over unused days?"</span>
+
+<span class="cc"># Layer 7 Final Output (GPT-3.5 Turbo, temperature=0.2):</span>
+<span class="cs">"""
+According to the employee handbook, full-time employees receive 20 days of paid
+vacation per calendar year [1]. Additionally, you may carry over up to 5 unused
+days to the next year, but you must submit your carryover request by December 15th [2].
+"""</span>
+
+<span class="cc"># Sources:</span>
+[<span class="cn">1</span>] employee_handbook.pdf, page <span class="cn">3</span>
+[<span class="cn">2</span>] employee_handbook.pdf, page <span class="cn">5</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="summary-section">
+  <div class="container">
+    <h3 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px;">Summary — The 7 Layers of RAG</h3>
+    <p>Each layer answers one critical question and transforms data for the next.</p>
+    <div class="sum-grid">
+      <div class="sum-row">
+        <div class="sum-num" style="color:var(--l1);border-color:var(--l1);background:var(--l1b)">1</div>
+        <div class="sum-body"><h5>Document Parsing</h5><p>How do I extract clean text? → Plain text + metadata via Unstructured.io</p></div>
+      </div>
+      <div class="sum-row">
+        <div class="sum-num" style="color:var(--l2);border-color:var(--l2);background:var(--l2b)">2</div>
+        <div class="sum-body"><h5>Chunking</h5><p>How do I split text? → Semantic chunks via LangChain splitters</p></div>
+      </div>
+      <div class="sum-row">
+        <div class="sum-num" style="color:var(--l3);border-color:var(--l3);background:var(--l3b)">3</div>
+        <div class="sum-body"><h5>Embedding</h5><p>How do I convert text to numbers? → Vectors via OpenAI, Cohere, BGE</p></div>
+      </div>
+      <div class="sum-row">
+        <div class="sum-num" style="color:var(--l4);border-color:var(--l4);background:var(--l4b)">4</div>
+        <div class="sum-body"><h5>Vector Storage</h5><p>How do I store and index? → HNSW index in Pinecone, Qdrant, or Chroma</p></div>
+      </div>
+      <div class="sum-row">
+        <div class="sum-num" style="color:var(--l5);border-color:var(--l5);background:var(--l5b)">5</div>
+        <div class="sum-body"><h5>Retrieval</h5><p>How do I find relevant chunks? → Hybrid search (vector + BM25)</p></div>
+      </div>
+      <div class="sum-row">
+        <div class="sum-num" style="color:var(--l6);border-color:var(--l6);background:var(--l6b)">6</div>
+        <div class="sum-body"><h5>Reranking</h5><p>How do I improve relevance? → Cross-encoder + MMR via Cohere Rerank</p></div>
+      </div>
+      <div class="sum-row" style="grid-column: 1 / -1;">
+        <div class="sum-num" style="color:var(--l7);border-color:var(--l7);background:var(--l7b)">7</div>
+        <div class="sum-body"><h5>Generation</h5><p>How do I produce the final answer? → Grounded, cited response via GPT-4, Claude, or Llama</p></div>
+      </div>
+    </div>
+
+    <hr class="section-hr" style="margin-top:48px;">
+
+    <h3 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:20px;">Common Pitfalls &amp; Solutions</h3>
+    <div class="pitfall-grid">
+      <div class="pitfall-card"><span class="layer-tag">Layer 1</span><h5>Garbled text from PDFs</h5><p class="fix">✓ Use OCR for scanned PDFs. Test pdfplumber vs PyPDF2 on your documents.</p></div>
+      <div class="pitfall-card"><span class="layer-tag">Layer 2</span><h5>Chunks cut mid-sentence</h5><p class="fix">✓ Use recursive splitter with sentence awareness and 10–20% overlap.</p></div>
+      <div class="pitfall-card"><span class="layer-tag">Layer 2</span><h5>Semantic drift in chunks</h5><p class="fix">✓ Use semantic chunking instead of fixed-size character splits.</p></div>
+      <div class="pitfall-card"><span class="layer-tag">Layer 5</span><h5>Poor retrieval for rare terms</h5><p class="fix">✓ Add hybrid search (keyword + vector). BM25 handles exact-match well.</p></div>
+      <div class="pitfall-card"><span class="layer-tag">Layer 5</span><h5>Outdated info in results</h5><p class="fix">✓ Add recency boosting to retrieval. Filter by last_modified metadata.</p></div>
+      <div class="pitfall-card"><span class="layer-tag">Layer 7</span><h5>Hallucination despite RAG</h5><p class="fix">✓ Lower temperature. Add explicit "I don't know" instruction to system prompt.</p></div>
+      <div class="pitfall-card"><span class="layer-tag">Layer 7</span><h5>Missing source citations</h5><p class="fix">✓ Pass chunk IDs in prompt. Instruct model to cite using [1], [2] format.</p></div>
+      <div class="pitfall-card"><span class="layer-tag">Layer 4</span><h5>Slow query time</h5><p class="fix">✓ Switch to HNSW index. Reduce K. Cache query embeddings.</p></div>
+      <div class="pitfall-card"><span class="layer-tag">Layer 3 &amp; 7</span><h5>High cost</h5><p class="fix">✓ Use smaller embedding model (BGE-small). Use GPT-3.5 or Haiku for generation.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="next-section">
+  <div class="container">
+    <h3 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px;">Next Steps After Mastering the 7 Layers</h3>
+    <p>Push further into advanced RAG patterns, evaluation, and production deployment.</p>
+    <div class="ns-grid">
+      <div class="ns-card">
+        <h4>🔄 Advanced RAG Patterns</h4>
+        <p>Self-RAG, Corrective RAG (CRAG), and Adaptive RAG — systems that evaluate and improve their own retrievals.</p>
+      </div>
+      <div class="ns-card">
+        <h4>📊 RAG Evaluation (RAGAS)</h4>
+        <p>Measure faithfulness, answer relevancy, and context recall. Know whether your RAG system is actually working.</p>
+      </div>
+      <div class="ns-card">
+        <h4>🚀 Production Deployment</h4>
+        <p>Monitoring pipelines, embedding caches, A/B testing retrieval strategies, and cost optimization at scale.</p>
+      </div>
+      <div class="ns-card">
+        <h4>🤖 Agentic RAG</h4>
+        <p>Add tools, multi-step reasoning, and autonomous retrieval loops — beyond single-turn Q&amp;A systems.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <b>The 7 Layers of RAG — A Complete Technical Guide</b><br>
+  Document Version 1.0 · April 2026 · Target: AI Engineers building RAG systems
+</footer>
+
+</body>
+</html>
