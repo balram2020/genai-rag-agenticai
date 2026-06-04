@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Patterns in AI Systems: The Complete Production Guide</title>
+  <meta name="description" content="A comprehensive technical breakdown of Multi-Agent Collaboration, Cost Optimization, and Production Hardening Pipelines for AI systems — with rich flow diagrams.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #1c2333;
+      --bg4: #21262d;
+      --border: #30363d;
+      --border2: #21262d;
+      --blue: #58a6ff;
+      --purple: #a371f7;
+      --green: #3fb950;
+      --orange: #f78166;
+      --yellow: #e3b341;
+      --cyan: #56d364;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --text3: #6e7681;
+      --r: 12px;
+      --r2: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 16px;
+    }
+
+    /* ── LAYOUT ─────────────────────────────────── */
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 52px;
+      align-items: flex-start;
+    }
+
+    .main-content { flex: 1; min-width: 0; padding: 48px 0 96px; }
+
+    /* ── HERO ────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #0d1117 0%, #0d1f3c 35%, #1a0a2e 65%, #0d1117 100%);
+      padding: 110px 24px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(88,166,255,0.12) 0%, transparent 70%);
+      animation: pulse 8s ease-in-out infinite alternate;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--purple), transparent);
+    }
+
+    @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(88,166,255,0.1);
+      border: 1px solid rgba(88,166,255,0.35);
+      color: var(--blue);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem; font-weight: 500;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 7px 18px; border-radius: 100px;
+      margin-bottom: 28px;
+      position: relative; z-index: 1;
+    }
+
+    .hero-badge::before { content: '◉'; font-size: 0.6rem; color: var(--green); animation: blink 2s step-start infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .hero h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(2.4rem, 5.5vw, 4rem);
+      font-weight: 900;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      margin-bottom: 22px;
+      background: linear-gradient(135deg, #ffffff 0%, #80bfff 40%, #c4a3fb 75%, #ffffff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative; z-index: 1;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: rgba(230,237,243,0.7);
+      max-width: 740px;
+      margin: 0 auto 40px;
+      line-height: 1.8;
+      position: relative; z-index: 1;
+    }
+
+    .hero-stats {
+      display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+      position: relative; z-index: 1;
+    }
+
+    .hero-stat .number {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-stat .label {
+      font-size: 0.8rem; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+
+    /* ── TOC ─────────────────────────────────────── */
+    .toc-container {
+      flex: 0 0 272px;
+      position: sticky; top: 24px;
+      display: none;
+    }
+
+    @media (min-width: 1060px) { .toc-container { display: block; } }
+
+    .toc-inner {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      padding: 24px;
+      margin-top: 48px;
+    }
+
+    .toc-inner h3 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--text3); margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 1px solid var(--border);
+    }
+
+    .toc ul { list-style: none; }
+    .toc li { margin-bottom: 2px; }
+
+    .toc a {
+      color: var(--text2); text-decoration: none;
+      font-size: 0.86rem; display: block;
+      padding: 7px 10px; border-radius: 8px;
+      transition: all 0.18s ease; line-height: 1.4;
+    }
+
+    .toc a:hover { color: var(--blue); background: rgba(88,166,255,0.08); padding-left: 16px; }
+
+    /* ── TYPOGRAPHY ──────────────────────────────── */
+    section { margin-bottom: 72px; }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.9rem; font-weight: 700;
+      color: var(--text); margin: 0 0 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 14px;
+      line-height: 1.25;
+    }
+
+    .num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      border-radius: 10px;
+      font-size: 0.85rem; font-weight: 700; color: white;
+    }
+
+    h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem; font-weight: 600;
+      color: var(--blue); margin: 36px 0 16px;
+    }
+
+    h4 {
+      font-size: 1.05rem; font-weight: 600;
+      color: var(--text); margin: 22px 0 10px;
+    }
+
+    p { font-size: 1.02rem; color: var(--text2); margin-bottom: 18px; line-height: 1.85; }
+    p strong { color: var(--text); font-weight: 600; }
+    p em { color: var(--yellow); font-style: normal; font-weight: 500; }
+
+    ul, ol { color: var(--text2); margin: 0 0 20px 24px; font-size: 1rem; }
+    li { margin-bottom: 10px; line-height: 1.75; }
+    li strong { color: var(--text); }
+
+    /* ── DIAGRAM WRAPPER ─────────────────────────── */
+    .diagram {
+      margin: 32px 0;
+      border-radius: var(--r2);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .diagram-caption {
+      padding: 10px 20px;
+      background: var(--bg4);
+      border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text3);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .diagram-caption::before { content: 'Fig.'; color: var(--blue); font-weight: 600; }
+
+    .diagram img {
+      width: 100%; height: auto; display: block;
+      background: #0d1117;
+    }
+
+    /* Zoom on hover */
+    .diagram { cursor: zoom-in; }
+    .diagram img { transition: transform 0.3s ease; }
+    .diagram:hover img { transform: scale(1.01); }
+
+    /* ── CARDS ───────────────────────────────────── */
+    .card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r2); padding: 28px;
+      margin: 24px 0;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover { border-color: rgba(88,166,255,0.4); box-shadow: 0 4px 20px rgba(88,166,255,0.08); }
+
+    /* ── CALLOUTS ────────────────────────────────── */
+    .callout {
+      padding: 20px 24px;
+      border-left: 4px solid;
+      border-radius: 0 var(--r) var(--r) 0;
+      margin: 24px 0;
+    }
+
+    .callout strong {
+      display: block; margin-bottom: 8px;
+      font-size: 0.82rem; text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .info { border-color: var(--blue); background: rgba(88,166,255,0.07); }
+    .info strong { color: var(--blue); }
+    .warn { border-color: var(--yellow); background: rgba(227,179,65,0.07); }
+    .warn strong { color: var(--yellow); }
+    .success { border-color: var(--green); background: rgba(63,185,80,0.07); }
+    .success strong { color: var(--green); }
+    .danger { border-color: var(--orange); background: rgba(247,129,102,0.07); }
+    .danger strong { color: var(--orange); }
+
+    /* ── CODE ────────────────────────────────────── */
+    pre {
+      background: #010409;
+      border: 1px solid var(--border);
+      color: #e6edf3;
+      padding: 24px; border-radius: var(--r);
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem; line-height: 1.75;
+      margin: 20px 0;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(88,166,255,0.1);
+      color: var(--blue);
+      padding: 2px 7px; border-radius: 5px;
+      font-size: 0.87em;
+    }
+
+    pre code { background: none; color: inherit; padding: 0; border-radius: 0; font-size: inherit; }
+
+    /* ── TABLES ──────────────────────────────────── */
+    .tbl-wrap { overflow-x: auto; margin: 28px 0; border-radius: var(--r); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.91rem; }
+    th, td { padding: 14px 18px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--bg4); color: var(--text); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    td { color: var(--text2); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+    td.good { color: var(--green); font-weight: 600; }
+    td.med  { color: var(--yellow); font-weight: 600; }
+    td.bad  { color: var(--orange); font-weight: 600; }
+
+    /* ── PILLS ───────────────────────────────────── */
+    .pills { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 24px; }
+    .pill {
+      padding: 6px 14px; border-radius: 100px;
+      font-size: 0.8rem; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.02em;
+    }
+    .pill-b { background: rgba(88,166,255,0.12); color: var(--blue); border: 1px solid rgba(88,166,255,0.28); }
+    .pill-p { background: rgba(163,113,247,0.12); color: var(--purple); border: 1px solid rgba(163,113,247,0.28); }
+    .pill-g { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.28); }
+    .pill-o { background: rgba(247,129,102,0.12); color: var(--orange); border: 1px solid rgba(247,129,102,0.28); }
+    .pill-y { background: rgba(227,179,65,0.12); color: var(--yellow); border: 1px solid rgba(227,179,65,0.28); }
+
+    /* ── NUMBERED STEPS ──────────────────────────── */
+    .steps { counter-reset: s; list-style: none; margin: 18px 0 24px; padding: 0; }
+    .steps li {
+      position: relative; padding: 0 0 0 58px;
+      margin-bottom: 22px; counter-increment: s;
+    }
+    .steps li::before {
+      content: counter(s);
+      position: absolute; left: 0; top: 0;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: white; font-weight: 700; font-size: 0.875rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── GRID ────────────────────────────────────── */
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 24px 0; }
+    .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin: 24px 0; }
+    .grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+
+    /* ── FEATURE CARD ────────────────────────────── */
+    .fc {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r2); padding: 24px;
+      transition: all 0.22s ease;
+    }
+    .fc:hover { border-color: rgba(88,166,255,0.4); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(88,166,255,0.1); }
+    .fc .ico { font-size: 1.9rem; margin-bottom: 14px; display: block; }
+    .fc h4 { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text); margin: 0 0 8px; }
+    .fc p { font-size: 0.88rem; color: var(--text2); margin: 0; line-height: 1.65; }
+
+    /* ── COMPARE ─────────────────────────────────── */
+    .compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 24px 0; }
+    .cbad { border-color: rgba(247,129,102,0.5) !important; }
+    .cgood { border-color: rgba(63,185,80,0.5) !important; }
+    .lbad { display: inline-block; background: rgba(247,129,102,0.12); color: var(--orange); border: 1px solid rgba(247,129,102,0.3); font-size: 0.72rem; font-weight: 700; padding: 2px 9px; border-radius: 4px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .lgood { display: inline-block; background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); font-size: 0.72rem; font-weight: 700; padding: 2px 9px; border-radius: 4px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ── DIVIDER ─────────────────────────────────── */
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 56px 0; }
+
+    /* ── HIGHLIGHT BOX ───────────────────────────── */
+    .hbox {
+      background: linear-gradient(135deg, rgba(88,166,255,0.06), rgba(163,113,247,0.06));
+      border: 1px solid rgba(88,166,255,0.2);
+      border-radius: var(--r2); padding: 28px; margin: 28px 0;
+    }
+
+    .hbox h4 { color: var(--blue); margin-top: 0; }
+
+    /* ── STAT ROW ────────────────────────────────── */
+    .stat-row { display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0; }
+    .stat { text-align: center; }
+    .stat .sv { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: var(--blue); }
+    .stat .sl { font-size: 0.78rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* ── FOOTER ──────────────────────────────────── */
+    footer {
+      text-align: center; padding: 52px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text3); font-size: 0.875rem;
+    }
+
+    footer strong { color: var(--text2); }
+
+    /* ── SCROLLBAR ───────────────────────────────── */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+    /* ── RESPONSIVE ──────────────────────────────── */
+    @media (max-width: 800px) {
+      .hero { padding: 64px 20px 52px; }
+      h2 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ HERO ══════════════ -->
+<header class="hero">
+  <div class="hero-badge">Production AI Architecture — Deep Technical Guide</div>
+  <h1>Agent Patterns in AI Systems</h1>
+  <p>A comprehensive breakdown of Multi-Agent Collaboration, Cost Optimization, and Production Hardening Pipelines — with richly annotated flow diagrams for every core concept.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="number">3</div><div class="label">Core Patterns</div></div>
+    <div class="hero-stat"><div class="number">9</div><div class="label">Deep Sections</div></div>
+    <div class="hero-stat"><div class="number">13</div><div class="label">Flow Diagrams</div></div>
+    <div class="hero-stat"><div class="number">5</div><div class="label">Hardening Layers</div></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ══════════════ TOC ══════════════ -->
+  <aside class="toc-container">
+    <div class="toc-inner">
+      <h3>Table of Contents</h3>
+      <nav class="toc">
+        <ul>
+          <li><a href="#intro">1. Introduction &amp; Evolution</a></li>
+          <li><a href="#supervisor">2. Pattern 1: Supervisor Agent</a></li>
+          <li><a href="#a2a">3. Pattern 2: Agent-to-Agent</a></li>
+          <li><a href="#tool">4. Pattern 3: Agent as a Tool</a>
+            <ul style="padding-left:14px;margin-top:4px">
+              <li><a href="#mixed-intent" style="font-size:0.8rem">Mixed Intent Problem</a></li>
+              <li><a href="#agents-as-tools-s06" style="font-size:0.8rem">Agents as Tools</a></li>
+              <li><a href="#tool-bloat" style="font-size:0.8rem">Tool Bloat &amp; Skills</a></li>
+              <li><a href="#pve" style="font-size:0.8rem">Planner → Validator → Executor</a></li>
+              <li><a href="#runtime-constraints" style="font-size:0.8rem">Runtime Constraints</a></li>
+              <li><a href="#skill-contracts" style="font-size:0.8rem">Skill Contracts</a></li>
+              <li><a href="#full-a2a" style="font-size:0.8rem">Full A2A Architecture</a></li>
+            </ul>
+          </li>
+          <li><a href="#advanced">5. Advanced Workflows</a></li>
+          <li><a href="#cost">6. Routing &amp; Cost Optimization</a></li>
+          <li><a href="#hardening">7. Production Hardening</a></li>
+          <li><a href="#comparison">8. Pattern Comparison</a></li>
+          <li><a href="#conclusion">9. Conclusion</a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN ══════════════ -->
+  <main class="main-content">
+
+    <!-- ── SECTION 1 ── -->
+    <section id="intro">
+      <h2><span class="num">1</span> Introduction &amp; Architectural Evolution</h2>
+
+      <p>
+        The way we build AI-powered systems has changed dramatically over the past three years. Early production deployments treated the LLM as a black box: you sent it a prompt and used the response. That was fine for demos, but it collapsed under the weight of real-world complexity — multi-domain queries, inconsistent tool selection, runaway costs, and no meaningful error recovery.
+      </p>
+
+      <p>
+        The industry has now converged on a third-generation architecture: <strong>Multi-Agent Collaboration</strong>. Rather than a single model doing everything, you compose a network of focused, specialised agents, each with a narrow scope. A traffic-directing supervisor routes work to the right specialist. Results are synthesised, quality-checked, and delivered through a hardened pipeline. This guide explains every component of that architecture, with a flow diagram for each pattern.
+      </p>
+
+      <div class="diagram">
+        <img src="arch_evolution.png" alt="Evolution of AI System Architecture from Gen 1 to Gen 3 Multi-Agent Collaboration" loading="lazy">
+        <div class="diagram-caption">Evolution of AI System Architecture — Gen 1 → Gen 2 → Gen 3 Multi-Agent Collaboration</div>
+      </div>
+
+      <div class="grid3">
+        <div class="fc">
+          <span class="ico">🌱</span>
+          <h4>Gen 1 — Single LLM Invoke</h4>
+          <p>One model, one prompt, one synchronous response. Zero observability. No retry. Fine for internal tools, breaks in customer-facing production under load.</p>
+        </div>
+        <div class="fc">
+          <span class="ico">📊</span>
+          <h4>Gen 2 — Monitored LLM</h4>
+          <p>Wrapped the LLM call with token counting, cost logging, timeout enforcement, and a basic retry loop. Still a single model but now survivable in production for simple workloads.</p>
+        </div>
+        <div class="fc">
+          <span class="ico">🤝</span>
+          <h4>Gen 3 — Multi-Agent Collaboration</h4>
+          <p>Supervisor routing, specialist agents with focused tool sets, structured state handoffs, quality reflection, graceful degradation, semantic caching, and full distributed tracing.</p>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <strong>Core Design Principle</strong>
+        <p style="margin:0">The right architectural pattern depends on four axes simultaneously: <strong>task complexity</strong>, <strong>reliability SLAs</strong>, <strong>latency budget</strong>, and <strong>cost ceiling</strong>. All four must be considered together — optimising for only one will break the others.</p>
+      </div>
+
+      <h3>Why Specialisation Wins</h3>
+      <p>
+        An LLM's reasoning quality degrades as its context window fills with irrelevant information. When a billing agent is also carrying tool definitions for order management, technical diagnostics, and subscription management, the model wastes attention on irrelevant paths. A specialist agent loaded with only its own 3–5 tools makes sharper decisions, has a shorter prompt, runs faster, and costs less per call. The supervisor exists precisely so that no individual agent ever needs to be a generalist.
+      </p>
+
+      <p>
+        This mirrors how humans organise large organisations: a manager (supervisor) understands the big picture and knows which department to call, but does not personally execute every task. The accountant (billing agent), the engineer (tech agent), and the logistics team (orders agent) each have deep expertise in a narrow domain.
+      </p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── SECTION 2: SUPERVISOR ── -->
+    <section id="supervisor">
+      <h2><span class="num">2</span> Pattern 1: Supervisor Agent</h2>
+
+      <p>
+        The Supervisor pattern is the most broadly applicable starting architecture for production AI systems. At its core, a lightweight <strong>Supervisor Agent</strong> acts as a traffic director: it reads the incoming request, classifies the intent, routes to the most capable specialist, receives a structured result, and synthesises a user-facing response. The supervisor itself never executes business logic — that belongs to specialists.
+      </p>
+
+      <h3>The Anti-Pattern First: Why One Giant Agent Fails</h3>
+
+      <p>
+        Before the Supervisor pattern became standard, the most common approach was to create a single, large agent loaded with every possible tool. Need to handle orders <em>and</em> billing <em>and</em> technical support? Just give the agent all the tools. This seems simpler in development, but it fails catastrophically in production for three reasons:
+      </p>
+
+      <ul>
+        <li><strong>Context Pollution:</strong> The LLM's context window fills with definitions for tools it will never use on a given request. This degrades reasoning quality and increases latency.</li>
+        <li><strong>Wrong Tool Selection:</strong> With 20+ tools available, the model occasionally selects the wrong one — calling a refund tool when the user asked about order status. These errors are hard to detect and expensive to debug.</li>
+        <li><strong>Unbounded Growth:</strong> As the system grows, new tools keep being added to the one agent. Over time it becomes an unmaintainable monolith that no individual understands completely.</li>
+      </ul>
+
+      <div class="diagram">
+        <img src="antipattern_giant_agent.png" alt="Anti-Pattern: One Giant Agent causes context pollution and wrong tool selection" loading="lazy">
+        <div class="diagram-caption">Anti-Pattern: One Giant Agent — every request floods context with irrelevant tool definitions, causing wrong tool selection and brittle behaviour</div>
+      </div>
+
+      <div class="compare">
+        <div class="card cbad">
+          <span class="lbad">Anti-Pattern</span>
+          <h4>One Giant Agent</h4>
+          <ul>
+            <li>All tools loaded for every request</li>
+            <li>Context pollution → wrong tool calls</li>
+            <li>Grows without bound over time</li>
+            <li>Single point of failure across all domains</li>
+            <li>Expensive: every call uses full context length</li>
+          </ul>
+        </div>
+        <div class="card cgood">
+          <span class="lgood">Best Practice</span>
+          <h4>Supervisor + Specialists</h4>
+          <ul>
+            <li>Supervisor carries only routing logic</li>
+            <li>Each specialist carries only its own tools</li>
+            <li>Each specialist independently deployable</li>
+            <li>Failure in one domain does not cascade</li>
+            <li>Cheaper: specialists use small, focused contexts</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>The Optimal Solution: Delegated Hierarchy</h3>
+
+      <p>
+        In the Supervisor pattern, the user request first hits the supervisor, which performs a lightweight classification pass — typically a small, fast model call that costs a fraction of a cent — to determine the request domain. It then routes to the appropriate specialist. The specialist executes the task with its own focused tool set, returns a structured result, and the supervisor synthesises the final response. Crucially, the supervisor does not need to understand how billing works or how orders are looked up — it only needs to know which agent to call.
+      </p>
+
+      <div class="diagram">
+        <img src="supervisor_pattern.png" alt="Supervisor Pattern showing delegated hierarchy with specialist agents" loading="lazy">
+        <div class="diagram-caption">Supervisor Pattern — Delegated Hierarchy: User request → Supervisor (classify + route) → Specialist Agents → Synthesis Node → Final Response</div>
+      </div>
+
+      <h3>Shared State — The Communication Protocol</h3>
+
+      <p>
+        How does information flow between the supervisor and specialists? Through a <strong>shared state object</strong> — an immutable record that accumulates fields as it moves through each stage of the workflow. The initial state contains only the raw user request. After the supervisor runs, it adds a <code>route</code> field. After the specialist runs, it adds <code>specialist_result</code> and <code>agent_used</code>. After synthesis, it adds <code>final_response</code>. This object is the audit trail: you can replay any conversation and inspect exactly what each agent saw and produced.
+      </p>
+
+      <div class="diagram">
+        <img src="shared_state_pipeline.png" alt="Shared State Pipeline showing data accumulation through workflow stages" loading="lazy">
+        <div class="diagram-caption">Shared State Pipeline — the state object accumulates immutable fields as it passes through each workflow node, creating a full audit trail</div>
+      </div>
+
+      <div class="card">
+        <h4>Strict Supervisor Responsibilities</h4>
+        <div class="grid2">
+          <div>
+            <p style="color:var(--green);font-weight:600;margin-bottom:10px;">✅ Supervisor SHOULD</p>
+            <ul>
+              <li>Classify the domain of the incoming request</li>
+              <li>Select the single most appropriate specialist</li>
+              <li>Pass only relevant context to the specialist</li>
+              <li>Receive the structured result from the specialist</li>
+              <li>Synthesise the final user-facing response</li>
+              <li>Handle specialist timeouts gracefully with a fallback</li>
+              <li>Log the route taken for auditing and debugging</li>
+            </ul>
+          </div>
+          <div>
+            <p style="color:var(--orange);font-weight:600;margin-bottom:10px;">❌ Supervisor SHOULD NOT</p>
+            <ul>
+              <li>Execute domain tools directly (orders, billing, etc.)</li>
+              <li>Contain business logic for multiple domains</li>
+              <li>Grow into a "smart router with side effects"</li>
+              <li>Hold domain-specific prompts or few-shot examples</li>
+              <li>Make parallel calls unless explicitly designed for it</li>
+              <li>Cache results from prior conversations without explicit logic</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h3>When to Scale the Supervisor</h3>
+      <p>
+        A single supervisor works well for up to ~8 specialist agents. Beyond that, consider a <strong>hierarchical supervisor model</strong>: a top-level supervisor routes to domain supervisors (e.g., "Commerce Supervisor" and "Support Supervisor"), each of which manages its own set of specialists. This keeps classification prompts short and routing decisions fast at every level.
+      </p>
+
+      <pre><code>// Hierarchical supervisor routing (pseudo-code)
+TopSupervisor.route(request) → "commerce" | "support" | "technical"
+
+CommerceSupervisor.route(request) → "orders" | "billing" | "subscriptions"
+
+OrdersAgent.execute(request, tools=[lookup_order, track_shipment])
+</code></pre>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── SECTION 3: A2A ── -->
+    <section id="a2a">
+      <h2><span class="num">3</span> Pattern 2: Agent-to-Agent (A2A)</h2>
+
+      <p>
+        The Agent-to-Agent (A2A) pattern discards the concept of a central orchestrator entirely. Instead, agents operate as <strong>autonomous peers in a mesh network</strong>. Each agent maintains a capability manifest — a structured declaration of what it can do, its performance characteristics, and its pricing. When an agent needs a capability it does not have, it broadcasts a need, receives bids from peers, evaluates bids against protocol-level rules, and contracts the winner to execute the task.
+      </p>
+
+      <p>
+        This pattern is inspired by real-world marketplace dynamics: you do not always go to the same vendor. You post a requirement, vendors quote, and you select based on price, reputation, and fit. A2A brings this flexibility to AI agent networks.
+      </p>
+
+      <div class="pills">
+        <span class="pill pill-b">Capability Discovery</span>
+        <span class="pill pill-p">Contract Negotiation</span>
+        <span class="pill pill-g">Peer Execution</span>
+        <span class="pill pill-o">Distributed Recovery</span>
+        <span class="pill pill-y">SLA-Aware Routing</span>
+        <span class="pill pill-b">Trust Scoring</span>
+        <span class="pill pill-p">Emergent Collaboration</span>
+      </div>
+
+      <div class="diagram">
+        <img src="a2a_network.png" alt="Agent-to-Agent peer-to-peer mesh network showing capability discovery and negotiation" loading="lazy">
+        <div class="diagram-caption">A2A Peer-to-Peer Mesh Network — Agent A broadcasts a need, agents B and C bid, Agent D is selected via SLA + budget criteria. Agent E has an irrelevant specialty and is ignored.</div>
+      </div>
+
+      <h3>The A2A Negotiation Protocol — Step by Step</h3>
+
+      <ol class="steps">
+        <li>
+          <strong>Need Broadcast:</strong> An initiating agent (Agent A) recognises that it lacks a required capability — e.g., multi-modal vision analysis, real-time financial data retrieval, or code execution. It broadcasts a structured <em>Request for Capability</em> (RFC) to its peer registry, including: task description, required output schema, maximum acceptable latency, budget per call, data residency constraints, and a minimum confidence threshold.
+        </li>
+        <li>
+          <strong>Capability Matching:</strong> Each peer agent evaluates the RFC against its own capability manifest. Agents that can fulfill the request respond with a <em>Bid</em>: their confidence score for this task type, estimated p50/p95 latency, cost per invocation, trust tier, and any hard constraints (e.g., "cannot process PII data outside EU region"). Non-matching agents remain silent.
+        </li>
+        <li>
+          <strong>Negotiation &amp; Selection:</strong> Agent A applies a scoring function to the received bids. Typical scoring weights: 40% accuracy confidence, 30% latency SLA fit, 20% cost, 10% trust tier. The highest-scoring peer is selected. If no peer scores above a minimum threshold, the initiating agent either escalates to a human or degrades gracefully.
+        </li>
+        <li>
+          <strong>Execution &amp; Exchange:</strong> The selected peer agent receives the task, executes it using its own tools and models, and may stream intermediate results back to the initiator (e.g., streaming partial analysis for long-running tasks). Intermediate artifacts — parsed documents, computed embeddings, partial summaries — can be shared to reduce redundant computation.
+        </li>
+        <li>
+          <strong>Completion &amp; Settlement:</strong> Agent A receives the final structured result, validates it against the expected output schema, logs the interaction (peer ID, latency, cost, quality score) for future bid scoring calibration, and continues the workflow. If the result fails validation, Agent A may renegotiate with the next-best bidder.
+        </li>
+      </ol>
+
+      <div class="grid2">
+        <div class="callout success">
+          <strong>When to Use A2A</strong>
+          <ul>
+            <li>Large-scale platforms with many independent capability providers</li>
+            <li>Marketplace architectures where agent quality/cost trade-offs change dynamically</li>
+            <li>Systems where capability needs are unknown at design time</li>
+            <li>Multi-tenant AI infrastructure where agents are contributed by different teams</li>
+            <li>Workloads needing autonomous load-balancing across heterogeneous providers</li>
+          </ul>
+        </div>
+        <div class="callout warn">
+          <strong>When NOT to Use A2A</strong>
+          <ul>
+            <li>Systems requiring strict, deterministic audit trails (financial regulation, HIPAA)</li>
+            <li>Small teams where coordination overhead outweighs benefits</li>
+            <li>Latency-critical paths where negotiation round-trips are unacceptable</li>
+            <li>Systems lacking distributed tracing infrastructure (A2A failures are hard to debug)</li>
+            <li>Early-stage products where a supervisor pattern is sufficient</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="hbox">
+        <h4>A2A vs. Supervisor — The Key Difference</h4>
+        <p style="margin:0;color:var(--text2)">In the Supervisor pattern, the routing logic is <em>programmed</em> — the supervisor knows in advance which specialists exist and what they do. In A2A, routing is <em>discovered</em> at runtime through negotiation. The Supervisor is deterministic and auditable; A2A is flexible and emergent. Neither is universally superior — use the right tool for the context.</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── SECTION 5: ADVANCED WORKFLOWS ── -->
+    <section id="advanced">
+      <h2><span class="num">5</span> Advanced Workflows &amp; Pipelines</h2>
+
+      <p>
+        Production AI systems rarely use a single pattern in isolation. Advanced workflows combine routing, reflection, parallelism, and checkpointing into layered pipelines that handle the full request lifecycle — from raw input to quality-assured output — with built-in mechanisms for self-correction, partial failure recovery, and cost management.
+      </p>
+
+      <h3>The Reflection Loop — Self-Correcting Output Quality</h3>
+
+      <p>
+        The Reflection Loop is one of the highest-impact patterns for improving output quality without human review. The system runs the <strong>Generator Agent</strong> to produce an initial draft, then immediately runs a separate <strong>Critic Agent</strong> that evaluates the draft against a rubric. If the score is below a threshold, the draft — along with the critique — is fed back to the Generator as context for a revised attempt. The loop continues up to a configured retry limit, after which the system escalates to a human reviewer.
+      </p>
+
+      <p>
+        The Critic Agent is the key design element. It must score on specific, measurable dimensions — not "is this good?" but "does this response contain the requested information? (0–25 pts) Is it free from hallucination? (0–25 pts) Does it comply with policy? (0–25 pts) Is the tone appropriate for the audience? (0–25 pts)". This gives the Generator concrete, actionable feedback to improve on.
+      </p>
+
+      <div class="diagram">
+        <img src="reflection_loop.png" alt="Agentic reflection loop showing quality gate with retry and escalation" loading="lazy">
+        <div class="diagram-caption">Agentic Reflection Loop — Generator produces a draft, Critic scores it. Score below 80 → Regenerate with critique as context (max 3 retries). Score 80+ → Approved Response. Max retries exceeded → Escalate to human review.</div>
+      </div>
+
+      <div class="hbox">
+        <h4>Designing a Good Critic Prompt</h4>
+        <p>The Critic Agent's prompt should be concrete and rubric-based, not vague. A weak critic prompt: <em>"Evaluate whether this response is good."</em> A strong critic prompt:</p>
+        <pre><code>You are a strict quality evaluator. Score the response across four dimensions:
+
+1. ACCURACY (0-25): Does the response correctly answer the user's question?
+   Penalise any factual claims not supported by the provided context.
+
+2. POLICY COMPLIANCE (0-25): Does the response avoid prohibited topics?
+   Check against policy list: [medical_advice, legal_advice, competitor_names]
+
+3. COMPLETENESS (0-25): Does the response address all parts of the user's question?
+
+4. TONE (0-25): Is the tone professional, empathetic, and appropriate?
+
+Output ONLY valid JSON:
+{"accuracy": int, "policy": int, "completeness": int, "tone": int,
+ "total": int, "critique": "specific actionable feedback for improvement"}</code></pre>
+      </div>
+
+      <h3>Parallel Fan-Out / Fan-In — Reducing Latency with Concurrency</h3>
+
+      <p>
+        For tasks that can be decomposed into independent subtasks, running specialists sequentially wastes time. <strong>Parallel Fan-Out</strong> spawns multiple specialist agents simultaneously, each working on a different aspect of the problem. A <strong>Fan-In Merger</strong> then waits for all results, handles partial failures (e.g., one specialist timed out), and produces a merged output.
+      </p>
+
+      <p>
+        This is the LLM-native equivalent of parallel processing in distributed computing. A sequential pipeline of three 2-second agents takes 6 seconds. The same pipeline with fan-out takes 2 seconds — a 3× latency improvement with the same quality of output.
+      </p>
+
+      <div class="diagram">
+        <img src="fanout_fanin.png" alt="Fan-out / Fan-in showing parallel specialist execution with merger node" loading="lazy">
+        <div class="diagram-caption">Fan-Out / Fan-In Pipeline — the Coordinator decomposes the task, Researcher, Analyst, and Critic agents run in parallel (reducing total latency by ~3×), and the Merger Node aggregates results and handles partial failures</div>
+      </div>
+
+      <div class="card">
+        <h4>Critical Rules for Pipeline Design</h4>
+        <ul>
+          <li><strong>Idempotency:</strong> Every node must produce the same output given the same input. This enables safe retries after failures without side effects (e.g., duplicate database writes, double-charged payments).</li>
+          <li><strong>Checkpointing:</strong> Persist the shared state after every node completion. If the pipeline fails at Node 4, you resume from Node 4's checkpoint — not from the start. This is non-negotiable for long-running pipelines.</li>
+          <li><strong>Per-Node Timeout Budgets:</strong> Never let one slow specialist block the entire pipeline indefinitely. Assign each node a timeout (e.g., Researcher: 8s, Analyst: 12s, Critic: 4s). If a node times out, the Merger receives a partial result and handles it gracefully.</li>
+          <li><strong>Dead Letter Queues (DLQ):</strong> Failed pipeline runs must land in a DLQ for human inspection and potential reprocessing. Silent failure — where tasks are dropped without a trace — is unacceptable in production.</li>
+          <li><strong>Back-Pressure:</strong> When downstream nodes are overloaded, upstream nodes should slow their intake rather than queuing unlimited work in memory. Implement explicit queue depth limits with back-pressure signalling.</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── SECTION 6: COST ROUTING ── -->
+    <section id="cost">
+      <h2><span class="num">6</span> Routing &amp; Cost Optimization</h2>
+
+      <p>
+        LLM inference cost is a first-class engineering concern, not a finance concern. At scale, the difference between routing every query to GPT-4o versus routing intelligently can mean the difference between a profitable product and an unsustainable one. A well-designed cost routing layer can reduce inference costs by <em>60–80%</em> with no measurable quality degradation on the majority of queries — because most queries do not need a frontier model.
+      </p>
+
+      <div class="stat-row">
+        <div class="stat"><div class="sv">60–80%</div><div class="sl">Cost reduction with smart routing</div></div>
+        <div class="stat"><div class="sv">~70%</div><div class="sl">FAQ cache hit rate</div></div>
+        <div class="stat"><div class="sv">&lt;10ms</div><div class="sl">Classifier overhead (p50)</div></div>
+        <div class="stat"><div class="sv">150×</div><div class="sl">Cost delta between Haiku &amp; Opus</div></div>
+      </div>
+
+      <h3>Complexity-Based Model Routing</h3>
+
+      <p>
+        The key insight is that query complexity follows a heavy-tailed distribution: the majority of queries are simple (FAQ, status lookups, rephrasing), a substantial minority are medium complexity (summarisation, Q&amp;A over a document), and only a small fraction genuinely require frontier-model reasoning (multi-step planning, novel problem-solving, sensitive decisions). A lightweight <strong>Complexity Classifier</strong> — itself a small, fast, cheap model — reads the query and outputs a routing label. The cost of the classifier call is negligible compared to the savings from routing correctly.
+      </p>
+
+      <div class="diagram">
+        <img src="cost_router.png" alt="Intelligent cost router dispatching queries by complexity to appropriate models" loading="lazy">
+        <div class="diagram-caption">Intelligent Cost Router — a lightweight Complexity Classifier (≈$0.001/call) dispatches to Haiku/Flash (SIMPLE), Sonnet/GPT-3.5 (MEDIUM), Opus/GPT-4o (COMPLEX), or Human+LLM (SENSITIVE). All results flow through a Unified Response &amp; Cost Log.</div>
+      </div>
+
+      <h3>Multi-Layer Caching Strategy</h3>
+
+      <p>
+        Caching is the single highest-leverage optimisation for LLM systems. The best LLM call is one that never happens. Layer your caching strategy from cheapest to most expensive:
+      </p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cache Strategy</th>
+              <th>Cost Reduction</th>
+              <th>Latency (p50)</th>
+              <th>Complexity</th>
+              <th>Best For</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Exact-match response cache</strong></td>
+              <td class="good">70–90%</td>
+              <td>&lt;5ms</td>
+              <td>Low</td>
+              <td>High-traffic FAQ endpoints</td>
+              <td>Redis/Memcached keyed by hash of (prompt + model + temperature)</td>
+            </tr>
+            <tr>
+              <td><strong>Semantic cache (embedding cosine)</strong></td>
+              <td class="good">50–75%</td>
+              <td>&lt;20ms</td>
+              <td>Medium</td>
+              <td>Similar-but-not-identical queries</td>
+              <td>Cosine sim ≥ 0.95 = cache hit. Use pgvector or Pinecone.</td>
+            </tr>
+            <tr>
+              <td><strong>Complexity-based model routing</strong></td>
+              <td class="med">40–70%</td>
+              <td>+8ms classifier</td>
+              <td>Medium</td>
+              <td>Mixed-complexity workloads</td>
+              <td>Classifier must be fast — use a 7B param model or a fine-tuned classifier</td>
+            </tr>
+            <tr>
+              <td><strong>Prefix caching (KV cache reuse)</strong></td>
+              <td class="med">20–50%</td>
+              <td>−30% TTFT</td>
+              <td>Low (API-level)</td>
+              <td>Long shared system prompts</td>
+              <td>Available on OpenAI, Anthropic APIs — free when prompt prefix matches</td>
+            </tr>
+            <tr>
+              <td><strong>Batch inference</strong></td>
+              <td class="med">20–40%</td>
+              <td>+100–500ms</td>
+              <td>High</td>
+              <td>Offline/async pipelines</td>
+              <td>Use when latency is not user-facing. Significant throughput gains.</td>
+            </tr>
+            <tr>
+              <td><strong>Prompt compression (LLMLingua)</strong></td>
+              <td class="bad">15–35%</td>
+              <td>+25ms compress</td>
+              <td>Medium</td>
+              <td>Long context prompts with RAG</td>
+              <td>Removes redundant tokens from context; quality-sensitive, test carefully.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout info">
+        <strong>Implementation Order</strong>
+        <p style="margin:0">Layer your caching in this order: (1) Exact-match cache first — highest ROI, lowest risk. (2) Prefix caching — enable at the API level for free. (3) Complexity routing. (4) Semantic caching. (5) Batch inference for async workloads. Do not implement all layers at once — measure each layer's impact before adding the next.</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── SECTION 7: PRODUCTION HARDENING ── -->
+    <section id="hardening">
+      <h2><span class="num">7</span> Production Hardening Pipeline</h2>
+
+      <p>
+        Shipping an agent to production is not the endpoint — it is the beginning of a continuous hardening process. Production AI systems require multiple overlapping layers of defence: input validation before the LLM ever sees a query, intelligent routing to the right model and cache tier, safe agent execution with circuit breakers, output guardrails before the user receives a response, and always-on observability that captures cost, latency, quality, and policy compliance simultaneously.
+      </p>
+
+      <p>
+        The hardening pipeline is not a single component. It is a <em>philosophy</em> applied at every layer — and each layer must be independent enough to function even if adjacent layers experience failures.
+      </p>
+
+      <div class="diagram">
+        <img src="production_hardening.png" alt="Production hardening pipeline showing five defence-in-depth layers" loading="lazy">
+        <div class="diagram-caption">Production Hardening Pipeline — Defence in Depth: 5 independent layers each providing a safety boundary. Failure at one layer does not compromise the others.</div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h4>🛡️ Layer 1: Input Validation</h4>
+          <p>Before any LLM call, every input must pass:</p>
+          <ul>
+            <li><strong>Schema validation:</strong> Required fields present, correct types, within length limits. Reject malformed requests with a 400 before they reach the model.</li>
+            <li><strong>PII detection &amp; masking:</strong> Identify and redact personal identifiers (emails, phone numbers, SSNs, names) before they enter the prompt. Use a lightweight NER model or regex patterns with human review for edge cases.</li>
+            <li><strong>Prompt injection detection:</strong> Scan for attempts to override the system prompt (e.g., "Ignore previous instructions…"). Flagged inputs should be rejected or quarantined, not silently passed through.</li>
+            <li><strong>Rate limiting:</strong> Enforce per-user, per-tenant, and per-endpoint rate limits. Prevent both accidental abuse (buggy clients) and intentional attacks.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>🚦 Layer 2: Intelligent Routing</h4>
+          <p>After validation, determine the cheapest path to a correct answer:</p>
+          <ul>
+            <li><strong>Cache lookup first:</strong> Check exact-match and semantic cache before any model call. Cache hits are free — never skip this step.</li>
+            <li><strong>Complexity classification:</strong> Route to the right model tier (Haiku → Sonnet → Opus) based on query complexity. A misrouted query to Opus that Haiku could handle is pure waste.</li>
+            <li><strong>Feature flags:</strong> Enable gradual rollouts of new models or routing rules. Send 5% of traffic to a new model, measure quality and cost, then increase the percentage. Never do a full cutover without data.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>⚙️ Layer 3: Agent Execution</h4>
+          <p>The core execution layer must be safe and bounded:</p>
+          <ul>
+            <li><strong>Tool call sandboxing:</strong> Agent-initiated tool calls (database queries, API calls, code execution) must run in a sandboxed environment with explicit allowlists. An agent should never be able to make an arbitrary outbound HTTP request to an unknown domain.</li>
+            <li><strong>Circuit breaker:</strong> Each external dependency (LLM API, tool, database) is wrapped in a circuit breaker. When error rates spike, the circuit opens — rejecting calls immediately and returning fallback responses until the dependency recovers.</li>
+            <li><strong>Timeout enforcer:</strong> Every agent call has a hard wall-clock timeout. A slow LLM API should not block a user for 120 seconds — fail fast, return a graceful error, and let the fallback hierarchy handle it.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>🔍 Layer 4: Output Guardrails</h4>
+          <p>Before any response reaches the user:</p>
+          <ul>
+            <li><strong>Reflection scoring:</strong> Run a fast Critic Agent over the response. If the score is below threshold, retry or escalate — never deliver a low-quality response to the user.</li>
+            <li><strong>Policy filter:</strong> Check the response against the policy blocklist (competitor mentions, prohibited medical/legal advice, harmful content). Blocked responses are replaced with a safe fallback message.</li>
+            <li><strong>PII re-masking:</strong> If PII was masked at input, ensure it is not hallucinated back into the output. Also check that no new PII from the model's training data appears in the response.</li>
+            <li><strong>Format validation:</strong> Validate that the output matches the expected format (JSON schema, markdown, plain text). Malformed outputs should trigger a retry, not be passed to the client.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Circuit Breaker Deep Dive</h3>
+
+      <p>
+        The Circuit Breaker is the most critical resilience pattern in production AI systems. It prevents <em>cascading failures</em>: when the LLM API is slow or returning errors, a system without a circuit breaker will continue hammering it with requests, causing the slow API to become even slower, causing timeouts to pile up, causing the entire system to become unresponsive. The circuit breaker breaks this feedback loop.
+      </p>
+
+      <div class="diagram">
+        <img src="circuit_breaker.png" alt="Circuit breaker state machine showing CLOSED, OPEN, and HALF-OPEN states" loading="lazy">
+        <div class="diagram-caption">Circuit Breaker State Machine — CLOSED (normal operation) → OPEN (all calls rejected, fallback returned) when error rate exceeds threshold → HALF-OPEN (1 probe call) after timeout expires → CLOSED again on probe success, or OPEN again on probe failure</div>
+      </div>
+
+      <div class="hbox">
+        <h4>Circuit Breaker Configuration Reference</h4>
+        <ul>
+          <li><strong>Error threshold:</strong> Typically 50% error rate over a 10-second window before opening. Adjust based on your SLA — stricter SLAs need a lower threshold (e.g., 20%).</li>
+          <li><strong>Minimum request volume:</strong> Do not open on 1 error out of 1 request. Require at least 10–20 requests in the observation window before evaluating the error rate.</li>
+          <li><strong>Open duration (cooldown):</strong> Start with 30 seconds. The circuit stays open for this duration before transitioning to HALF-OPEN for a probe.</li>
+          <li><strong>Probe timeout:</strong> The single probe call in HALF-OPEN state gets a generous timeout (2× normal) to account for a slow-recovering service.</li>
+          <li><strong>Fallback response:</strong> Never return a 500 error to the user when the circuit is open. Return a pre-generated graceful message: "I'm having trouble right now. Please try again in a moment." Log the circuit-open event to your alerting system.</li>
+        </ul>
+      </div>
+
+      <h3>Graceful Degradation — The Fallback Hierarchy</h3>
+      <p>
+        When a specialist agent is unavailable — due to circuit opening, timeout, or deployment issue — the system should never fail hard to the user. Design a <strong>four-level fallback hierarchy</strong>:
+      </p>
+
+      <ol class="steps">
+        <li><strong>Primary Path:</strong> Call the designated specialist agent with full context and wait up to the configured timeout. Succeeds in ≥ 99% of cases under normal operation.</li>
+        <li><strong>Secondary Path:</strong> On primary failure, retry with a simpler prompt against a smaller, more reliable model (e.g., drop from GPT-4o to GPT-3.5). Accept slightly lower quality for the sake of availability. Covers the majority of transient failures.</li>
+        <li><strong>Tertiary Path:</strong> Return a pre-generated, category-level cached response for this request type. Not personalised, but accurate and safe. Appropriate for FAQ-style queries that have stable answers.</li>
+        <li><strong>Quaternary Path:</strong> Deliver a graceful, empathetic "I'm unable to help right now" message with a suggested path to human support. Log the full request to a DLQ for human review. <em>Never return an error stack trace, model output artefact, or "I don't know" without a clear next action for the user.</em></li>
+      </ol>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── SECTION 8: COMPARISON ── -->
+    <section id="comparison">
+      <h2><span class="num">8</span> Pattern Comparison &amp; Selection</h2>
+
+      <p>
+        Each pattern solves a different class of problem. Understanding their trade-offs is essential for choosing — or composing — the right architecture. The table below compares all three across eight dimensions, followed by a decision tree for practical pattern selection.
+      </p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Dimension</th>
+              <th>Supervisor Agent</th>
+              <th>Agent-to-Agent (A2A)</th>
+              <th>Agent as a Tool</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Orchestration</strong></td>
+              <td>Centralized (deterministic)</td>
+              <td>Decentralized (negotiated)</td>
+              <td>Caller-driven (contract)</td>
+            </tr>
+            <tr>
+              <td><strong>Latency Profile</strong></td>
+              <td class="good">Low (1 routing hop)</td>
+              <td class="bad">Medium-High (negotiation RTT)</td>
+              <td class="good">Low-Very Low (cacheable)</td>
+            </tr>
+            <tr>
+              <td><strong>Cost</strong></td>
+              <td class="med">Medium</td>
+              <td class="bad">Higher (coordination overhead)</td>
+              <td class="good">Lowest (cache hit optimization)</td>
+            </tr>
+            <tr>
+              <td><strong>Auditability</strong></td>
+              <td class="good">High (deterministic paths)</td>
+              <td class="med">Medium (distributed)</td>
+              <td class="good">Highest (API call logs)</td>
+            </tr>
+            <tr>
+              <td><strong>Flexibility / Adaptability</strong></td>
+              <td class="med">Medium (fixed routing rules)</td>
+              <td class="good">Highest (emergent)</td>
+              <td class="bad">Low (schema-bound)</td>
+            </tr>
+            <tr>
+              <td><strong>Debugging Complexity</strong></td>
+              <td class="good">Low (single trace)</td>
+              <td class="bad">High (distributed consensus)</td>
+              <td class="good">Lowest (unit-testable nodes)</td>
+            </tr>
+            <tr>
+              <td><strong>Scalability</strong></td>
+              <td class="good">High</td>
+              <td class="good">Highest</td>
+              <td class="good">High</td>
+            </tr>
+            <tr>
+              <td><strong>Team Size Fit</strong></td>
+              <td>2–20 engineers</td>
+              <td>20+ engineers (platform team required)</td>
+              <td>Any size</td>
+            </tr>
+            <tr>
+              <td><strong>Best For</strong></td>
+              <td>Customer support, CRM, document routing, chatbots</td>
+              <td>Marketplace platforms, dynamic capability networks</td>
+              <td>Reusable components, microservice replacement, ML pipelines</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Pattern Selection Decision Tree</h3>
+
+      <p>
+        Use this decision tree to navigate to the right starting pattern for your system. Remember: patterns are composable — your final architecture will likely combine elements of all three. Start with the simplest pattern that meets your requirements, and evolve as you gather production data.
+      </p>
+
+      <div class="diagram">
+        <img src="decision_tree.png" alt="Pattern selection decision tree navigating through key architectural decisions" loading="lazy">
+        <div class="diagram-caption">Pattern Selection Decision Tree — start from "New System?" and follow YES/NO branches to the recommended pattern. Remember: these are starting points, not final architectures.</div>
+      </div>
+
+      <div class="callout success">
+        <strong>The Composition Principle</strong>
+        <p style="margin:0">The most sophisticated production systems combine all three patterns: a <strong>Supervisor</strong> provides overall structure and routing; individual specialists are implemented as <strong>Tool-Agents</strong> with stable API contracts; under the hood, some Tool-Agents use <strong>A2A negotiation</strong> to dynamically select the best underlying model or capability provider. Start simple, instrument everything, and add complexity only where data proves it is needed.</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════ SESSION 06 ══════════════ -->
+    <section id="tool">
+      <h2><span class="num">4</span> Pattern 3: Agent as a Tool — Production A2A Orchestration &amp; Skills-Based Execution</h2>
+
+      <div class="callout info">
+        <strong>Agent as a Tool</strong>
+        <p style="margin:0">This section is regarding Agent as Tools and Skills-Based Execution</em> of the Advanced Agentic AI Bootcamp. It extends the previous patterns with production-grade concepts: <strong>mixed-intent routing</strong>, <strong>agents-as-tools</strong>, <strong>skill registries</strong>, the <strong>Planner → Validator → Executor</strong> pipeline, and <strong>runtime governance</strong>.</p>
+      </div>
+
+      <p>
+        The previous session established supervisor-to-specialist routing for clean, single-domain requests. Below section confronts the harder reality: <strong>real enterprise requests are rarely single-domain</strong>. A user saying "My order hasn't arrived and I was charged twice" needs the orders capability <em>and</em> the billing capability <em>and</em> potentially the policy capability — simultaneously. No single-route supervisor can handle this correctly.
+      </p>
+
+      <!-- ── MIXED INTENT ── -->
+      <h3 id="mixed-intent">The Mixed Intent Problem</h3>
+
+      <p>
+        Simple supervisor routing forces a binary choice: pick one specialist and route. But real customer problems do not arrive pre-sorted into clean categories. Consider two real-world examples:
+      </p>
+
+      <div class="grid2">
+        <div class="card">
+          <p style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--yellow);margin-bottom:12px">"My order has not arrived, and I was charged twice. Please check both."</p>
+          <p style="margin:0;font-size:0.9rem;color:var(--text2)">Requires: <strong style="color:var(--green)">Orders</strong> + <strong style="color:var(--green)">Billing</strong> + possibly <strong style="color:var(--green)">Policy</strong> — all three simultaneously.</p>
+        </div>
+        <div class="card">
+          <p style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--yellow);margin-bottom:12px">"The app crashed during payment, but money got debited."</p>
+          <p style="margin:0;font-size:0.9rem;color:var(--text2)">Requires: <strong style="color:var(--green)">Technical</strong> (crash) + <strong style="color:var(--green)">Billing</strong> (debit) + <strong style="color:var(--green)">Policy</strong> (refund decision).</p>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <img src="mixed_intent_problem.png" alt="Mixed Intent Problem — Simple Supervisor forced to choose one route fails multi-domain requests" loading="lazy">
+        <div class="diagram-caption">Mixed Intent Problem — when a simple supervisor must choose exactly one route: Orders → misses billing, Billing → misses the order, General → too generic. All three are wrong.</div>
+      </div>
+
+      <p>
+        The <strong>shift in thinking</strong> required here is fundamental: previously, one request mapped to one specialist. Now, one request must map to <em>multiple controlled capabilities</em>, executed in a coordinated way, with their results synthesised into a single coherent answer. This is what production A2A orchestration solves.
+      </p>
+
+      <div class="divider" style="margin:32px 0"></div>
+
+      <!-- ── AGENTS AS TOOLS ── -->
+      <h3 id="agents-as-tools-s06">Agents as Tools — Specialists as Callable Units</h3>
+
+      <p>
+        Below section is the distinction between <strong>low-level tools</strong> and <strong>agent-level tools</strong>. A low-level tool is an atomic function: <code>get_order_status</code>, <code>lookup_transaction</code>, <code>submit_return</code>. These are fine for simple pipelines. But a <strong>whole specialist agent</strong> can also be exposed as a tool — <code>orders_agent_tool</code>, <code>billing_agent_tool</code>, <code>policy_agent_tool</code>.
+      </p>
+
+      <p>
+        When exposed this way, each agent-tool is not a single function. Internally it has its own <em>system prompt, tool set, reasoning chain, validation logic, and structured output schema</em>. The orchestrator sees it as a simple callable — but internally it is a full specialist agent with all its complexity encapsulated. This is the Agent-as-a-Tool pattern applied at the multi-capability level.
+      </p>
+
+      <div class="diagram">
+        <img src="agents_as_tools_pattern.png" alt="Agents as Tools — orchestrator calls specialist agents as callable units returning structured results" loading="lazy">
+        <div class="diagram-caption">Agents as Tools — the Orchestrator Agent calls orders_agent_tool, billing_agent_tool, technical_agent_tool, policy_agent_tool, and rag_agent_tool as callable units. Each returns structured output. Synthesis combines them into the Final Answer.</div>
+      </div>
+
+      <div class="callout danger">
+        <strong>The New Failure Mode</strong>
+        <p style="margin:0">If the orchestrator can call any agent-tool any number of times without constraint, it will. An unconstrained orchestrator may call 5 agents when 2 would suffice, loop repeatedly, inflate costs, and balloon latency. <strong>Agent-as-tool is powerful, but it needs governance.</strong> The orchestrator can reason — the platform must enforce limits.</p>
+      </div>
+
+      <div class="divider" style="margin:32px 0"></div>
+
+      <!-- ── TOOL BLOAT ── -->
+      <h3 id="tool-bloat">Tool Bloat &amp; The Skills Solution</h3>
+
+      <p>
+        A tempting shortcut is to simply give the orchestrator every low-level tool directly. Why add the agent-as-tool abstraction? Because exposing 40+ tools to a single agent creates <strong>tool bloat</strong> — a critical anti-pattern that degrades the entire system.
+      </p>
+
+      <p>
+        Every tool has a name, a description, an input schema, and argument descriptions — all of which consume tokens in the context window. With 40 tools loaded, the model spends significant reasoning capacity just figuring out which tool is even relevant to the current request. This leads to higher token usage, higher cost, slower inference, and critically — wrong tool selection.
+      </p>
+
+      <div class="diagram">
+        <img src="tool_bloat_problem.png" alt="Tool Bloat causes context window pollution leading to wrong tool calls and higher cost" loading="lazy">
+        <div class="diagram-caption">Tool Bloat — a Supervisor Agent loaded with 40 tool definitions suffers Context Window Pollution → Higher Input Tokens → Tool Selection Confusion → Wrong Tool Calls → Higher Cost + Latency. Tool bloat is context pollution.</div>
+      </div>
+
+      <h4>What Is a Skill? Tool vs. Skill vs. Agent</h4>
+
+      <p>The solution is to introduce a new abstraction layer — the <strong>Skill</strong>. Understanding the three levels is essential:</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Layer</th><th>Example</th><th>What it Does</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Tool</strong></td>
+              <td>Atomic Action</td>
+              <td><code>lookup_transaction</code></td>
+              <td>One specific, deterministic function call. No reasoning.</td>
+            </tr>
+            <tr>
+              <td><strong>Skill</strong></td>
+              <td>Packaged Capability</td>
+              <td><code>billing_skill</code></td>
+              <td>Groups related tools behind a contract. Has limits, fallbacks, structured output.</td>
+            </tr>
+            <tr>
+              <td><strong>Agent</strong></td>
+              <td>Reasoning Unit</td>
+              <td><code>supervisor_agent</code></td>
+              <td>Decides what capability or action is needed. Reasons over skills, not tools.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        A <strong>skill</strong> solves one capability area by grouping all the internal tools needed for that area. <code>orders_skill</code> internally uses <code>get_order_status</code>, <code>get_tracking_url</code>, and <code>submit_return</code>. <code>billing_skill</code> uses <code>lookup_transaction</code>, <code>check_invoice</code>, and <code>request_refund</code>. The supervisor never needs to see the internal tools — only the skill. This is <em>information hiding</em> applied to AI agent design.
+      </p>
+
+      <div class="diagram">
+        <img src="skills_reduce_bloat.png" alt="Skills reduce tool bloat — planner sees 5 capabilities instead of 40 individual tools" loading="lazy">
+        <div class="diagram-caption">Skills Reduce Tool Bloat — the Planner/Supervisor sees 5 skills (orders_skill, billing_skill, technical_skill, rag_skill, policy_skill) instead of 40 individual tool definitions. Each skill encapsulates its internal tools.</div>
+      </div>
+
+      <div class="card">
+        <h4>RAG Skill &amp; Policy Skill — The Hidden Complexity</h4>
+        <div class="grid2">
+          <div>
+            <p style="color:var(--blue);font-weight:600;margin-bottom:8px">rag_skill</p>
+            <p style="font-size:0.9rem;margin:0">Internally coordinates three sequential stages: <strong>retriever</strong> (semantic search over a vector store), <strong>reranker</strong> (cross-encoder re-scoring of retrieved chunks), and <strong>context builder</strong> (selecting and formatting the final context window). The planner calls <code>rag_skill</code> and gets back a structured answer — it never knows about the internal 3-stage pipeline.</p>
+          </div>
+          <div>
+            <p style="color:var(--purple);font-weight:600;margin-bottom:8px">policy_skill</p>
+            <p style="font-size:0.9rem;margin:0">Internally checks against a rules engine, runs compliance checks, and evaluates whether the request requires escalation to a human. For billing issues above a threshold, <code>policy_skill</code> must always be included in the plan. This is a governance rule enforced at the validator level — not a prompt instruction.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hbox">
+        <h4>Claude Skills — Parallel Concept</h4>
+        <p>Claude Skills package instructions, scripts, and resources so the model loads only the right capability when needed — the same principle of reducing context bloat. The enterprise skill pattern from below <strong>production controls</strong> on top: each skill has a contract, allowed tools, runtime limits, fallback behaviour, structured output schema, and full observability. Mental model: <em>Claude Skills solve context loading. Enterprise skills solve context loading + production governance.</em></p>
+      </div>
+
+      <div class="divider" style="margin:32px 0"></div>
+
+      <!-- ── PLANNER VALIDATOR EXECUTOR ── -->
+      <h3 id="pve">Planner → Validator → Executor — Production Safety Pattern</h3>
+
+      <p>
+        Giving the supervisor direct access to skill tools works — but for enterprise systems, Below introduces a more controlled pattern: <strong>Planner → Validator → Executor → Synthesis</strong>. The key insight is the separation of <em>planning</em> from <em>execution</em>. The LLM plans; the platform validates; the platform executes. The LLM cannot bypass the validation step.
+      </p>
+
+      <div class="grid2">
+        <div class="card">
+          <h4>🗺️ Skill Planner</h4>
+          <p style="font-size:0.92rem">The LLM reads the user request and produces a <strong>structured Skill Plan</strong> — a JSON object specifying which skills to invoke, what each skill should do, why it was selected, and the priority. Critically, the planner does <em>not</em> execute anything. It only proposes. This allows the plan to be inspected, validated, and potentially rejected before any tool is called.</p>
+        </div>
+        <div class="card">
+          <h4>✅ Plan Validator</h4>
+          <p style="font-size:0.92rem">A <strong>deterministic</strong> component (not an LLM) that checks the plan against a ruleset: skill count ≤ max_skill_calls, every skill exists in the registry, user has permission to call the skill, high-risk billing tasks include policy_skill, estimated budget is available, no duplicate skill calls. The validator either passes the plan to the executor or rejects it with a reason for clarification/escalation.</p>
+        </div>
+        <div class="card">
+          <h4>⚙️ Skill Executor</h4>
+          <p style="font-size:0.92rem">Runs only the skills that passed validation, in the approved order. Each skill call goes through the Runtime Constraint Enforcement chain: skill allowed? → call limit? → budget? → timeout? Each produces a structured <code>SkillOutput</code> object. The executor collects all outputs and passes them to synthesis.</p>
+        </div>
+        <div class="card">
+          <h4>🔀 Synthesis</h4>
+          <p style="font-size:0.92rem">Merges all SkillOutput objects into a single coherent final answer. The synthesis layer also handles partial failures gracefully — if billing_skill succeeded but orders_skill timed out, synthesis answers the billing question and acknowledges the orders issue is being investigated, rather than failing the entire response.</p>
+        </div>
+      </div>
+
+      <!-- PVE SVG diagram -->
+      <div class="diagram">
+        <svg viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif" style="width:100%;background:#161b22;display:block">
+          <defs>
+            <marker id="pveArr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/></marker>
+            <marker id="pveRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f78166"/></marker>
+            <marker id="pveGrn" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/></marker>
+            <linearGradient id="pvePurp" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#58a6ff;stop-opacity:0.25"/><stop offset="100%" style="stop-color:#a371f7;stop-opacity:0.25"/></linearGradient>
+          </defs>
+          <!-- User Request -->
+          <rect x="270" y="14" width="220" height="46" rx="10" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+          <text x="380" y="41" text-anchor="middle" fill="#8b949e" font-size="13" font-weight="600">User Request</text>
+          <line x1="380" y1="60" x2="380" y2="86" stroke="#58a6ff" stroke-width="2" marker-end="url(#pveArr)"/>
+          <!-- Guardrail -->
+          <rect x="255" y="88" width="250" height="46" rx="10" fill="#1c2333" stroke="#58a6ff" stroke-width="2"/>
+          <text x="380" y="108" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="700">🛡️ Input Guardrail</text>
+          <text x="380" y="125" text-anchor="middle" fill="#6e7681" font-size="10">PII masking · injection check · rate limit</text>
+          <line x1="380" y1="134" x2="380" y2="160" stroke="#58a6ff" stroke-width="2" marker-end="url(#pveArr)"/>
+          <!-- Planner -->
+          <rect x="220" y="162" width="320" height="58" rx="10" fill="url(#pvePurp)" stroke="#a371f7" stroke-width="2"/>
+          <text x="380" y="187" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="700">🗺️ Skill Planner (LLM)</text>
+          <text x="380" y="207" text-anchor="middle" fill="#8b949e" font-size="10">Proposes structured Skill Plan · Does NOT execute</text>
+          <line x1="380" y1="220" x2="380" y2="248" stroke="#58a6ff" stroke-width="2" marker-end="url(#pveArr)"/>
+          <!-- Structured Plan -->
+          <rect x="255" y="250" width="250" height="38" rx="8" fill="#1c2333" stroke="#30363d" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <text x="380" y="273" text-anchor="middle" fill="#e3b341" font-size="11" font-weight="600">Structured Skill Plan (JSON)</text>
+          <line x1="380" y1="288" x2="380" y2="314" stroke="#58a6ff" stroke-width="2" marker-end="url(#pveArr)"/>
+          <!-- Validator -->
+          <rect x="210" y="316" width="340" height="58" rx="10" fill="rgba(227,179,65,0.1)" stroke="#e3b341" stroke-width="2"/>
+          <text x="380" y="341" text-anchor="middle" fill="#e3b341" font-size="14" font-weight="700">✅ Plan Validator (Deterministic)</text>
+          <text x="380" y="361" text-anchor="middle" fill="#8b949e" font-size="10">skill allowed? · count limit? · high-risk? · budget? · duplicates?</text>
+          <!-- Invalid path -->
+          <line x1="210" y1="345" x2="148" y2="345" stroke="#f78166" stroke-width="2" marker-end="url(#pveRed)"/>
+          <text x="176" y="337" text-anchor="middle" fill="#f78166" font-size="9">Invalid</text>
+          <rect x="20" y="318" width="126" height="54" rx="10" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1.5"/>
+          <text x="83" y="341" text-anchor="middle" fill="#f78166" font-size="11" font-weight="600">Clarify /</text>
+          <text x="83" y="357" text-anchor="middle" fill="#f78166" font-size="11" font-weight="600">Reject /</text>
+          <text x="83" y="365" text-anchor="middle" fill="#6e7681" font-size="9">Escalate</text>
+          <!-- Valid path -->
+          <line x1="380" y1="374" x2="380" y2="402" stroke="#3fb950" stroke-width="2" marker-end="url(#pveGrn)"/>
+          <text x="396" y="392" fill="#3fb950" font-size="9">Valid ✓</text>
+          <!-- Executor -->
+          <rect x="220" y="404" width="320" height="46" rx="10" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="2"/>
+          <text x="380" y="423" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="700">⚙️ Skill Executor</text>
+          <text x="380" y="441" text-anchor="middle" fill="#8b949e" font-size="10">Runs only validated skills · applies runtime constraints</text>
+          <!-- Fan out to skills -->
+          <line x1="295" y1="450" x2="180" y2="476" stroke="#3fb950" stroke-width="1.5" marker-end="url(#pveGrn)"/>
+          <line x1="350" y1="450" x2="320" y2="476" stroke="#3fb950" stroke-width="1.5" marker-end="url(#pveGrn)"/>
+          <line x1="380" y1="450" x2="440" y2="476" stroke="#3fb950" stroke-width="1.5" marker-end="url(#pveGrn)"/>
+          <line x1="465" y1="450" x2="580" y2="476" stroke="#3fb950" stroke-width="1.5" marker-end="url(#pveGrn)"/>
+          <!-- Skill boxes -->
+          <rect x="100" y="478" width="110" height="32" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="155" y="498" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="600">orders_skill</text>
+          <rect x="265" y="478" width="110" height="32" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="320" y="498" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="600">billing_skill</text>
+          <rect x="395" y="478" width="110" height="32" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="450" y="498" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="600">rag_skill</text>
+          <rect x="525" y="478" width="110" height="32" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="580" y="498" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="600">policy_skill</text>
+        </svg>
+        <div class="diagram-caption">Planner → Validator → Executor — User Request → Guardrail → Skill Planner (proposes) → Structured Skill Plan → Plan Validator (deterministic checks) → Invalid: Clarify/Reject/Escalate | Valid: Skill Executor → runs approved skills in parallel</div>
+      </div>
+
+      <h4>Structured Skill Plan — What the Planner Produces</h4>
+      <p>The planner does not produce a paragraph — it produces a validated JSON structure that the validator can inspect deterministically:</p>
+
+      <pre><code>{
+  "tasks": [
+    {
+      "skill_name": "orders_skill",
+      "task": "Check why the order has not arrived.",
+      "reason": "User mentioned delayed delivery.",
+      "priority": "normal"
+    },
+    {
+      "skill_name": "billing_skill",
+      "task": "Investigate duplicate charge.",
+      "reason": "User mentioned being charged twice.",
+      "priority": "high"
+    },
+    {
+      "skill_name": "policy_skill",
+      "task": "Check whether refund or escalation policy applies.",
+      "reason": "Billing issue may involve refund decision.",
+      "priority": "high"
+    }
+  ],
+  "requires_human": false,
+  "reason": "Request contains order delay and duplicate billing issue."
+}</code></pre>
+
+      <p>This structured format means the validator can apply <em>deterministic rules</em> — not LLM judgment — to approve or reject the plan. Every check is a simple conditional, not another model call.</p>
+
+      <div class="card">
+        <h4>Plan Validation Rules (All Deterministic)</h4>
+        <ol class="steps" style="counter-reset:s">
+          <li><strong>Skill count ≤ max_skill_calls:</strong> If the plan requests 5 skills but the limit is 3, reject immediately. The LLM cannot reason its way around this — it is a hard numeric check.</li>
+          <li><strong>Every skill exists in the registry:</strong> If the plan references <code>refund_skill</code> and that skill doesn't exist in the registry, reject. This prevents hallucinated capability names.</li>
+          <li><strong>Tenant/user permissions:</strong> If the current user's tier is not allowed to invoke <code>policy_skill</code>, reject that task from the plan. The remaining tasks may still proceed.</li>
+          <li><strong>High-risk billing rule:</strong> Any plan containing <code>billing_skill</code> with a task involving refunds <em>must</em> also include <code>policy_skill</code>. This is a compliance rule enforced in code, not in a prompt.</li>
+          <li><strong>Budget check:</strong> Estimated cost of running all skills (sum of per-skill cost estimates) must not exceed the per-request budget cap. Reject if over-budget.</li>
+          <li><strong>Duplicate skill removal:</strong> If the planner included <code>billing_skill</code> twice (a common LLM hallucination), deduplicate. One call is sufficient.</li>
+          <li><strong>Unsupported requests:</strong> If no skill in the registry can address the request, return a clarification request to the user rather than attempting to handle it with an ill-suited skill.</li>
+        </ol>
+      </div>
+
+      <div class="divider" style="margin:32px 0"></div>
+
+      <!-- ── RUNTIME CONSTRAINTS ── -->
+      <h3 id="runtime-constraints">Runtime Constraints &amp; Governance</h3>
+
+      <p>
+        This is where most agent systems fail. Developers put constraints <em>inside prompts</em>:
+      </p>
+
+      <pre><code># WRONG — these are wishes, not enforcement:
+"Use at most 3 tools."
+"Do not call unnecessary agents."
+"Keep cost low. Avoid loops."</code></pre>
+
+      <p>
+        Prompt instructions are <em>suggestions</em> to the LLM. They are not enforcement. The model may follow them most of the time — but under novel inputs, adversarial prompts, or simply unusual phrasings, it will break them. Real enforcement must happen in <strong>runtime wrappers, validators, and execution controls</strong> that live <em>outside the prompt</em>.
+      </p>
+
+      <!-- Runtime Constraint SVG -->
+      <div class="diagram">
+        <svg viewBox="0 0 680 440" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif" style="width:100%;background:#161b22;display:block">
+          <defs>
+            <marker id="rcArr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/></marker>
+            <marker id="rcRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f78166"/></marker>
+            <marker id="rcGrn" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/></marker>
+          </defs>
+          <!-- Start -->
+          <rect x="240" y="14" width="200" height="42" rx="10" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+          <text x="340" y="39" text-anchor="middle" fill="#8b949e" font-size="12" font-weight="600">Skill Call Requested</text>
+          <line x1="340" y1="56" x2="340" y2="80" stroke="#8b949e" stroke-width="2" marker-end="url(#rcArr)"/>
+          <!-- Gate 1 -->
+          <rect x="210" y="82" width="260" height="50" rx="10" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="2"/>
+          <text x="340" y="104" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="700">❓ Skill Allowed?</text>
+          <text x="340" y="121" text-anchor="middle" fill="#6e7681" font-size="9">Check skill registry + user permissions</text>
+          <line x1="470" y1="107" x2="530" y2="107" stroke="#f78166" stroke-width="2" marker-end="url(#rcRed)"/>
+          <text x="500" y="100" fill="#f78166" font-size="9" text-anchor="middle">NO</text>
+          <rect x="532" y="82" width="130" height="50" rx="10" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1.5"/>
+          <text x="597" y="107" text-anchor="middle" fill="#f78166" font-size="11" font-weight="600">Reject / Escalate</text>
+          <line x1="340" y1="132" x2="340" y2="156" stroke="#3fb950" stroke-width="2" marker-end="url(#rcGrn)"/>
+          <text x="352" y="147" fill="#3fb950" font-size="9">YES</text>
+          <!-- Gate 2 -->
+          <rect x="200" y="158" width="280" height="50" rx="10" fill="rgba(227,179,65,0.08)" stroke="#e3b341" stroke-width="2"/>
+          <text x="340" y="180" text-anchor="middle" fill="#e3b341" font-size="13" font-weight="700">❓ Call Limit Available?</text>
+          <text x="340" y="197" text-anchor="middle" fill="#6e7681" font-size="9">max_skill_calls not yet reached</text>
+          <line x1="480" y1="183" x2="530" y2="183" stroke="#f78166" stroke-width="2" marker-end="url(#rcRed)"/>
+          <text x="505" y="176" fill="#f78166" font-size="9" text-anchor="middle">NO</text>
+          <rect x="532" y="158" width="130" height="50" rx="10" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1.5"/>
+          <text x="597" y="183" text-anchor="middle" fill="#f78166" font-size="11" font-weight="600">Stop / Fallback</text>
+          <line x1="340" y1="208" x2="340" y2="232" stroke="#3fb950" stroke-width="2" marker-end="url(#rcGrn)"/>
+          <text x="352" y="223" fill="#3fb950" font-size="9">YES</text>
+          <!-- Gate 3 -->
+          <rect x="200" y="234" width="280" height="50" rx="10" fill="rgba(88,166,255,0.06)" stroke="#58a6ff" stroke-width="1.5"/>
+          <text x="340" y="256" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="700">❓ Budget Available?</text>
+          <text x="340" y="273" text-anchor="middle" fill="#6e7681" font-size="9">estimated cost ≤ max_total_cost_usd</text>
+          <line x1="480" y1="259" x2="530" y2="259" stroke="#f78166" stroke-width="2" marker-end="url(#rcRed)"/>
+          <text x="505" y="252" fill="#f78166" font-size="9" text-anchor="middle">NO</text>
+          <rect x="532" y="234" width="130" height="50" rx="10" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1.5"/>
+          <text x="597" y="259" text-anchor="middle" fill="#f78166" font-size="11" font-weight="600">Budget Fallback</text>
+          <line x1="340" y1="284" x2="340" y2="308" stroke="#3fb950" stroke-width="2" marker-end="url(#rcGrn)"/>
+          <text x="352" y="299" fill="#3fb950" font-size="9">YES</text>
+          <!-- Gate 4 -->
+          <rect x="200" y="310" width="280" height="50" rx="10" fill="rgba(163,113,247,0.08)" stroke="#a371f7" stroke-width="1.5"/>
+          <text x="340" y="332" text-anchor="middle" fill="#a371f7" font-size="13" font-weight="700">❓ Timeout Available?</text>
+          <text x="340" y="349" text-anchor="middle" fill="#6e7681" font-size="9">elapsed time ≤ max_latency_seconds</text>
+          <line x1="480" y1="335" x2="530" y2="335" stroke="#f78166" stroke-width="2" marker-end="url(#rcRed)"/>
+          <text x="505" y="328" fill="#f78166" font-size="9" text-anchor="middle">NO</text>
+          <rect x="532" y="310" width="130" height="50" rx="10" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1.5"/>
+          <text x="597" y="335" text-anchor="middle" fill="#f78166" font-size="11" font-weight="600">Timeout Fallback</text>
+          <line x1="340" y1="360" x2="340" y2="386" stroke="#3fb950" stroke-width="2" marker-end="url(#rcGrn)"/>
+          <text x="352" y="376" fill="#3fb950" font-size="9">YES</text>
+          <!-- Execute -->
+          <rect x="210" y="388" width="260" height="42" rx="10" fill="rgba(63,185,80,0.12)" stroke="#3fb950" stroke-width="2.5"/>
+          <text x="340" y="413" text-anchor="middle" fill="#3fb950" font-size="14" font-weight="700">✅ Execute Skill</text>
+          <!-- Structured Output label -->
+          <text x="340" y="436" text-anchor="middle" fill="#6e7681" font-size="10">→ Structured SkillOutput returned</text>
+        </svg>
+        <div class="diagram-caption">Runtime Constraint Enforcement — before any skill executes, four gates must pass: Skill Allowed? → Call Limit? → Budget? → Timeout? Only then does the skill run. Each NO path triggers a specific fallback. This is enforcement, not suggestion.</div>
+      </div>
+
+      <pre><code>RUNTIME_LIMITS = {
+    "max_skill_calls": 3,           # Maximum skills per request
+    "max_tool_calls_per_skill": 2,  # Maximum internal tool calls per skill
+    "max_total_cost_usd": 0.05,     # Maximum cost per request
+    "max_latency_seconds": 20,      # Maximum wall-clock time
+    "allowed_skills": [             # Allowlist — only these may be invoked
+        "orders_skill",
+        "billing_skill",
+        "technical_skill",
+        "rag_skill",
+        "policy_skill",
+    ],
+}</code></pre>
+
+      <div class="callout warn">
+        <strong>The Core Principle</strong>
+        <p style="margin:0">The LLM can choose the work. The platform must control the work. Prompts are suggestions; runtime wrappers are enforcement. Any constraint that must hold in production must be implemented in code — not in natural language instructions to the model.</p>
+      </div>
+
+      <div class="divider" style="margin:32px 0"></div>
+
+      <!-- ── SKILL CONTRACTS ── -->
+      <h3 id="skill-contracts">Skill Contracts &amp; Structured Output Schema</h3>
+
+      <p>
+        What makes a skill a <em>production capability</em> rather than a prompt folder is its <strong>contract</strong>. Every skill has a formally defined contract — not a vague description, but a structured specification of what the skill is responsible for, what tools it may use, what it must never do, and how it behaves when things go wrong.
+      </p>
+
+      <!-- Skill Contract SVG -->
+      <div class="diagram">
+        <svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif" style="width:100%;background:#161b22;display:block">
+          <!-- Left: Skill Contract -->
+          <rect x="20" y="14" width="340" height="332" rx="12" fill="#1c2333" stroke="#58a6ff" stroke-width="2"/>
+          <text x="190" y="44" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="700">Skill Contract</text>
+          <text x="190" y="62" text-anchor="middle" fill="#6e7681" font-size="9" letter-spacing="1">billing_skill</text>
+          <!-- fields -->
+          <text x="40" y="88" fill="#a371f7" font-size="10" font-weight="600">skill_name:</text><text x="130" y="88" fill="#8b949e" font-size="10">"billing_skill"</text>
+          <text x="40" y="108" fill="#a371f7" font-size="10" font-weight="600">responsibility:</text><text x="130" y="108" fill="#8b949e" font-size="10">"Payments, invoices, refunds"</text>
+          <text x="40" y="130" fill="#a371f7" font-size="10" font-weight="600">allowed_tools:</text>
+          <text x="55" y="148" fill="#3fb950" font-size="9">• lookup_transaction</text>
+          <text x="55" y="163" fill="#3fb950" font-size="9">• request_refund</text>
+          <text x="55" y="178" fill="#3fb950" font-size="9">• check_invoice</text>
+          <text x="40" y="200" fill="#f78166" font-size="10" font-weight="600">forbidden_actions:</text>
+          <text x="55" y="218" fill="#6e7681" font-size="9">• No auto-refunds above $500</text>
+          <text x="55" y="233" fill="#6e7681" font-size="9">• No subscription plan changes</text>
+          <text x="55" y="248" fill="#6e7681" font-size="9">• No legal or tax advice</text>
+          <text x="40" y="270" fill="#a371f7" font-size="10" font-weight="600">max_tool_calls:</text><text x="148" y="270" fill="#e3b341" font-size="10">2</text>
+          <text x="40" y="288" fill="#a371f7" font-size="10" font-weight="600">timeout_seconds:</text><text x="160" y="288" fill="#e3b341" font-size="10">10</text>
+          <text x="40" y="306" fill="#a371f7" font-size="10" font-weight="600">fallback_behavior:</text>
+          <text x="55" y="322" fill="#6e7681" font-size="9">Safe response + escalate high-risk cases</text>
+          <text x="55" y="337" fill="#6e7681" font-size="9">to human reviewer</text>
+          <!-- Right: Skill Output Schema -->
+          <rect x="400" y="14" width="340" height="332" rx="12" fill="#1c2333" stroke="#3fb950" stroke-width="2"/>
+          <text x="570" y="44" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="700">SkillOutput Schema</text>
+          <text x="570" y="62" text-anchor="middle" fill="#6e7681" font-size="9" letter-spacing="1">Every skill returns this structure</text>
+          <!-- fields -->
+          <text x="420" y="90" fill="#58a6ff" font-size="10" font-weight="600">skill_name:</text><text x="500" y="90" fill="#8b949e" font-size="10">str</text>
+          <text x="420" y="113" fill="#58a6ff" font-size="10" font-weight="600">status:</text><text x="480" y="113" fill="#e3b341" font-size="10">resolved | needs_more_info</text>
+          <text x="480" y="128" fill="#e3b341" font-size="10"> | failed | escalated</text>
+          <text x="420" y="150" fill="#58a6ff" font-size="10" font-weight="600">answer:</text><text x="480" y="150" fill="#8b949e" font-size="10">str — the skill's response</text>
+          <text x="420" y="172" fill="#58a6ff" font-size="10" font-weight="600">confidence:</text><text x="500" y="172" fill="#8b949e" font-size="10">float (0.0 – 1.0)</text>
+          <text x="420" y="194" fill="#58a6ff" font-size="10" font-weight="600">tools_used:</text><text x="505" y="194" fill="#8b949e" font-size="10">list[str]</text>
+          <text x="420" y="216" fill="#58a6ff" font-size="10" font-weight="600">requires_human:</text><text x="528" y="216" fill="#8b949e" font-size="10">bool</text>
+          <text x="420" y="238" fill="#58a6ff" font-size="10" font-weight="600">risk_level:</text><text x="498" y="238" fill="#f78166" font-size="10">low | medium | high</text>
+          <text x="420" y="260" fill="#58a6ff" font-size="10" font-weight="600">cost_usd:</text><text x="492" y="260" fill="#8b949e" font-size="10">float — actual cost incurred</text>
+          <text x="420" y="282" fill="#58a6ff" font-size="10" font-weight="600">latency_ms:</text><text x="504" y="282" fill="#8b949e" font-size="10">float — execution time</text>
+          <!-- Why it matters -->
+          <rect x="410" y="296" width="320" height="42" rx="8" fill="rgba(63,185,80,0.06)" stroke="#3fb950" stroke-width="1"/>
+          <text x="570" y="313" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="600">Enables: synthesis · logging · testing</text>
+          <text x="570" y="328" text-anchor="middle" fill="#6e7681" font-size="9">escalation · cost tracking · SLA monitoring</text>
+        </svg>
+        <div class="diagram-caption">Skill Contract (left) defines responsibility, allowed tools, forbidden actions, limits, and fallback. SkillOutput Schema (right) is the structured response every skill must return — enabling synthesis, logging, testing, and escalation automation.</div>
+      </div>
+
+      <p>
+        Every skill returns a <strong>structured SkillOutput</strong> — not a paragraph of text. This structured output is what makes the entire system observable, testable, and synthesisable:
+      </p>
+
+      <ul>
+        <li><strong><code>status</code>:</strong> Tells the synthesis layer exactly what happened — resolved, needs more info, failed, or escalated. This drives synthesis behaviour without additional LLM reasoning.</li>
+        <li><strong><code>confidence</code>:</strong> A float between 0 and 1. Low-confidence outputs (e.g., below 0.7) can trigger automatic escalation to a human reviewer or a second-pass reflection check.</li>
+        <li><strong><code>requires_human</code>:</strong> A boolean flag that, when true, bypasses the synthesis layer entirely and routes directly to a human agent queue.</li>
+        <li><strong><code>risk_level</code>:</strong> Used by the synthesis layer to apply appropriate caveats. A high-risk billing answer is presented differently from a low-risk FAQ answer.</li>
+        <li><strong><code>cost_usd</code> and <code>latency_ms</code>:</strong> Actual measured values, logged per skill call. This enables per-skill cost attribution, SLA monitoring, and identifying which skills are most expensive.</li>
+      </ul>
+
+      <pre><code>class SkillOutput(BaseModel):
+    skill_name: str
+    status: Literal["resolved", "needs_more_info", "failed", "escalated"]
+    answer: str
+    confidence: float           # 0.0 – 1.0
+    tools_used: list[str]
+    requires_human: bool
+    risk_level: Literal["low", "medium", "high"]
+    cost_usd: float
+    latency_ms: float</code></pre>
+
+      <div class="divider" style="margin:32px 0"></div>
+
+      <!-- ── FULL A2A ARCHITECTURE ── -->
+      <h3 id="full-a2a">Full Production A2A Architecture</h3>
+
+      <p>
+        Final implementation combines all the patterns into a single, production-controlled pipeline. Below is the architecture of the final system, with guardrails at every stage — from input validation to plan approval to runtime constraints — and a clear separation of concerns between planner, validator, and executor.:
+      </p>
+
+      <!-- Full A2A SVG -->
+      <div class="diagram">
+        <svg viewBox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif" style="width:100%;background:#161b22;display:block">
+          <defs>
+            <marker id="fa2aArr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/></marker>
+            <marker id="fa2aRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f78166"/></marker>
+            <marker id="fa2aGrn" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/></marker>
+            <linearGradient id="fa2aGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#58a6ff;stop-opacity:0.15"/><stop offset="100%" style="stop-color:#a371f7;stop-opacity:0.15"/></linearGradient>
+          </defs>
+          <!-- input_guardrail -->
+          <rect x="260" y="10" width="240" height="44" rx="10" fill="rgba(88,166,255,0.1)" stroke="#58a6ff" stroke-width="2"/>
+          <text x="380" y="36" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="700">input_guardrail</text>
+          <line x1="380" y1="54" x2="380" y2="78" stroke="#58a6ff" stroke-width="2" marker-end="url(#fa2aArr)"/>
+          <!-- skill_planner -->
+          <rect x="240" y="80" width="280" height="44" rx="10" fill="rgba(163,113,247,0.15)" stroke="#a371f7" stroke-width="2"/>
+          <text x="380" y="106" text-anchor="middle" fill="#a371f7" font-size="13" font-weight="700">skill_planner</text>
+          <line x1="380" y1="124" x2="380" y2="148" stroke="#58a6ff" stroke-width="2" marker-end="url(#fa2aArr)"/>
+          <!-- plan_validator -->
+          <rect x="230" y="150" width="300" height="44" rx="10" fill="rgba(227,179,65,0.12)" stroke="#e3b341" stroke-width="2"/>
+          <text x="380" y="176" text-anchor="middle" fill="#e3b341" font-size="13" font-weight="700">plan_validator</text>
+          <!-- invalid branch -->
+          <line x1="230" y1="172" x2="166" y2="172" stroke="#f78166" stroke-width="2" marker-end="url(#fa2aRed)"/>
+          <text x="195" y="164" text-anchor="middle" fill="#f78166" font-size="9">invalid</text>
+          <rect x="22" y="150" width="142" height="44" rx="10" fill="rgba(247,129,102,0.08)" stroke="#f78166" stroke-width="1.5"/>
+          <text x="93" y="176" text-anchor="middle" fill="#f78166" font-size="11" font-weight="600">clarify_or_escalate</text>
+          <!-- valid branch -->
+          <line x1="380" y1="194" x2="380" y2="220" stroke="#3fb950" stroke-width="2" marker-end="url(#fa2aGrn)"/>
+          <text x="396" y="210" fill="#3fb950" font-size="9">valid</text>
+          <!-- skill_executor -->
+          <rect x="220" y="222" width="320" height="44" rx="10" fill="rgba(63,185,80,0.12)" stroke="#3fb950" stroke-width="2"/>
+          <text x="380" y="248" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="700">skill_executor</text>
+          <!-- fan out -->
+          <line x1="288" y1="266" x2="158" y2="300" stroke="#3fb950" stroke-width="1.5" marker-end="url(#fa2aGrn)"/>
+          <line x1="330" y1="266" x2="288" y2="300" stroke="#3fb950" stroke-width="1.5" marker-end="url(#fa2aGrn)"/>
+          <line x1="380" y1="266" x2="416" y2="300" stroke="#3fb950" stroke-width="1.5" marker-end="url(#fa2aGrn)"/>
+          <line x1="440" y1="266" x2="546" y2="300" stroke="#3fb950" stroke-width="1.5" marker-end="url(#fa2aGrn)"/>
+          <!-- Skill boxes -->
+          <rect x="82" y="302" width="150" height="36" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="157" y="324" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="600">orders_skill</text>
+          <rect x="242" y="302" width="150" height="36" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="317" y="324" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="600">billing_skill</text>
+          <rect x="374" y="302" width="150" height="36" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="449" y="324" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="600">rag_skill</text>
+          <rect x="536" y="302" width="150" height="36" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="611" y="324" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="600">policy_skill</text>
+          <!-- Merge to synthesis -->
+          <line x1="157" y1="338" x2="330" y2="366" stroke="#a371f7" stroke-width="1.5" marker-end="url(#fa2aArr)"/>
+          <line x1="317" y1="338" x2="352" y2="366" stroke="#a371f7" stroke-width="1.5" marker-end="url(#fa2aArr)"/>
+          <line x1="449" y1="338" x2="408" y2="366" stroke="#a371f7" stroke-width="1.5" marker-end="url(#fa2aArr)"/>
+          <line x1="611" y1="338" x2="430" y2="366" stroke="#a371f7" stroke-width="1.5" marker-end="url(#fa2aArr)"/>
+          <!-- synthesis -->
+          <rect x="250" y="368" width="260" height="22" rx="8" fill="rgba(163,113,247,0.12)" stroke="#a371f7" stroke-width="2"/>
+          <text x="380" y="383" text-anchor="middle" fill="#a371f7" font-size="12" font-weight="600">synthesis → END</text>
+          <!-- Trace logs side label -->
+          <rect x="670" y="80" width="80" height="280" rx="8" fill="rgba(88,166,255,0.04)" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="710" y="200" text-anchor="middle" fill="#6e7681" font-size="9" transform="rotate(-90 710 200)">Trace Logs — per-skill observability (cost · latency · status)</text>
+        </svg>
+        <div class="diagram-caption">Full Production A2A Architecture : input_guardrail → skill_planner → plan_validator → [invalid: clarify_or_escalate] [valid: skill_executor → orders_skill, billing_skill, rag_skill, policy_skill] → synthesis → END. Trace logs capture per-skill observability throughout.</div>
+      </div>
+
+      <div class="hbox" style="margin-top:28px">
+        <h4>Key Takeaways</h4>
+        <div class="grid2">
+          <div>
+            <p style="color:var(--blue);font-weight:600;font-size:0.9rem;margin-bottom:6px">Routing Limit</p>
+            <p style="font-size:0.88rem">Fixed supervisor routing works for clean single-domain requests. Real enterprise requests are mixed-intent and need multiple capabilities simultaneously.</p>
+            <p style="color:var(--blue);font-weight:600;font-size:0.9rem;margin-bottom:6px;margin-top:16px">Tool Bloat</p>
+            <p style="font-size:0.88rem">Too many low-level tools create context pollution and degrade routing quality. Group them into skills with contracts.</p>
+            <p style="color:var(--blue);font-weight:600;font-size:0.9rem;margin-bottom:6px;margin-top:16px">Plan-Then-Execute</p>
+            <p style="font-size:0.88rem">Planner-validator-executor is safer than free-form tool calling. The model proposes; the platform disposes.</p>
+          </div>
+          <div>
+            <p style="color:var(--purple);font-weight:600;font-size:0.9rem;margin-bottom:6px">Agents as Tools</p>
+            <p style="font-size:0.88rem">Subagents exposed as tools let the orchestrator invoke multiple specialists per request. Without constraints, this creates new failure modes.</p>
+            <p style="color:var(--purple);font-weight:600;font-size:0.9rem;margin-bottom:6px;margin-top:16px">Skills</p>
+            <p style="font-size:0.88rem">Skills group tools into production capabilities with contracts, limits, and structured outputs. Tools are implementation details. Skills are production capabilities.</p>
+            <p style="color:var(--purple);font-weight:600;font-size:0.9rem;margin-bottom:6px;margin-top:16px">Runtime Wrappers</p>
+            <p style="font-size:0.88rem">Prompt constraints are not enforcement. Runtime wrappers enforce limits. Any constraint that must hold must live in code.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <strong>Final Principle</strong>
+        <p style="margin:0">Agents should not be given every tool. Agents should be given <em>the right capabilities, at the right time, under the right constraints.</em> Production A2A does not mean agents randomly chatting — it means controlled collaboration, bounded by runtime governance, producing structured outputs, with full observability.</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── SECTION 10: CONCLUSION ── -->
+    <section id="conclusion">
+      <h2><span class="num">9</span> Conclusion</h2>
+
+      <p>
+        Multi-agent AI systems have crossed from experimental to essential. The three patterns in this guide — Supervisor, A2A, and Agent-as-a-Tool — represent the current state of the art for building AI systems that are <strong>reliable, cost-efficient, and maintainable at production scale</strong>. None is universally superior; each is a tool suited to specific constraints.
+      </p>
+
+      <div class="grid3">
+        <div class="fc">
+          <span class="ico">🧠</span>
+          <h4>Supervisor Pattern</h4>
+          <p>Your default starting point for customer-facing systems. Adds structure and domain separation without over-engineering. The right first pattern for 80% of teams.</p>
+        </div>
+        <div class="fc">
+          <span class="ico">🔗</span>
+          <h4>A2A Pattern</h4>
+          <p>For large-scale platforms where capability needs are dynamic and agent providers are contributed by multiple teams. Requires mature distributed systems infrastructure.</p>
+        </div>
+        <div class="fc">
+          <span class="ico">🔧</span>
+          <h4>Agent as Tool</h4>
+          <p>The most testable and maintainable pattern. Use it for any LLM capability that needs a stable contract, caching, versioning, or independent deployment.</p>
+        </div>
+      </div>
+
+      <h3>The Four Non-Negotiables of Production AI</h3>
+      <p>Regardless of which pattern you choose, these four properties must be built in from day one — retrofitting them is exponentially more expensive:</p>
+
+      <ol class="steps">
+        <li><strong>Observability:</strong> Distributed tracing across every agent call, structured logging with correlation IDs, cost tracking per request, and quality dashboards. If you cannot measure it, you cannot improve it. Instrument before you ship.</li>
+        <li><strong>Idempotency:</strong> Every node, every agent, every tool call must be safely retryable. Design your side effects (database writes, API calls) to be idempotent from the start. Retrofitting idempotency into a live system is extremely painful.</li>
+        <li><strong>Graceful Degradation:</strong> Define your fallback hierarchy before your first production incident, not during it. Decide in advance: what does the system do when the LLM API returns a 503? When the database times out? When the circuit breaker opens? Document these paths explicitly.</li>
+        <li><strong>Cost Governance:</strong> Set per-request cost budgets and enforce them in code. Alert when average cost per session exceeds your target. Review the top 10% most expensive requests weekly — they are usually the ones with runaway tool loops or unexpectedly long contexts.</li>
+      </ol>
+
+      <div class="callout info">
+        <strong>Final Thought</strong>
+        <p style="margin:0">The AI engineering field is moving fast, but the underlying engineering principles are stable: separation of concerns, defensive programming, observability, and graceful degradation have been foundations of reliable software for decades. The patterns in this guide apply those principles to the specific constraints of LLM-based systems. Master the principles, and the patterns will evolve naturally as the technology does.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p><strong>Agent Patterns in AI Systems</strong> — The Complete Production Architecture Guide</p>
+  <p style="margin-top:10px;color:var(--text3)">13 flow diagrams · 9 deep sections · Built with Inter, Outfit &amp; JetBrains Mono · Dark mode optimised</p>
+</footer>
+
+</body>
+</html>
